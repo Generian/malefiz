@@ -1,0 +1,7 @@
+.container {
+  margin: 1rem;
+  background-color: beige;
+  position: relative;
+  border: 3px solid brown;
+  border-radius: 3rem;
+}

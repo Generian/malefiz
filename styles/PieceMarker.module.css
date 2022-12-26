@@ -1,0 +1,20 @@
+.default {
+  background-color: violet;
+  box-sizing: border-box;
+}
+
+.RED {
+  background-color: red;
+}
+
+.GREEN {
+  background-color: green;
+}
+
+.YELLOW {
+  background-color: yellow;
+}
+
+.BLUE {
+  background-color: blue;
+}

@@ -1,0 +1,43 @@
+.default {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: black;
+  box-sizing: border-box;
+}
+
+.default div {
+  position: absolute;
+}
+
+.default div p {
+  font-size: small;
+}
+
+.highlightMovePosition {
+  background-color: lightgrey!important;
+}
+
+.BLOCK_MARKER {
+  background-color: orange;
+}
+
+.FINISH {
+  background-color: gold;
+}
+
+.RED {
+  background-color: var(--lightRed);
+}
+
+.GREEN {
+  background-color: var(--lightGreen);
+}
+
+.YELLOW {
+  background-color: var(--lightYellow);
+}
+
+.BLUE {
+  background-color: var(--lightBlue);
+}
