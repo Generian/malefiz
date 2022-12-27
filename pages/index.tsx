@@ -1,7 +1,33 @@
 import Head from 'next/head'
 import styles from '../styles/Home.module.css'
+import io from 'Socket.IO-client'
+import { useEffect, useState } from 'react'
+let socket
 
 export default function Home() {
+  const [input, setInput] = useState('')
+
+  useEffect(() => {socketInitializer()}, [])
+
+  const socketInitializer = async () => {
+    await fetch('/api/socket')
+    socket = io()
+
+    socket.on('connect', () => {
+      console.log('connected')
+    })
+
+    socket.on('update-input', msg => {
+      setInput(msg)
+    })
+  }
+
+  const onChangeHandler = (e) => {
+    console.log("new message")
+    setInput(e.target.value)
+    socket.emit('input-change', e.target.value)
+  }
+  
   return (
     <>
       <Head>
@@ -11,7 +37,11 @@ export default function Home() {
         <link rel="icon" href="/favicon.ico" />
       </Head>
       <main className={styles.main}>
-       
+        <input
+          placeholder="Type something"
+          value={input}
+          onChange={onChangeHandler}
+        />
       </main>
     </>
   )

@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "start": "next start",
+    "start": "next start -p $PORT",
     "lint": "next lint"
   },
   "dependencies": {
@@ -17,6 +17,8 @@
     "react": "18.2.0",
     "react-dice-roll": "^1.2.2",
     "react-dom": "18.2.0",
+    "socket.io": "^4.5.4",
+    "socket.io-client": "^4.5.4",
     "typescript": "4.9.4"
   }
 }
