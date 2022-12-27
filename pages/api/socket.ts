@@ -1,4 +1,4 @@
-import { Server } from 'Socket.IO'
+import { Server } from 'socket.io'
 import type { NextApiRequest, NextApiResponse } from 'next'
 
 const SocketHandler = (

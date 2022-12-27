@@ -1,6 +1,6 @@
 import Head from 'next/head'
 import styles from '../styles/Home.module.css'
-import io from 'Socket.IO-client'
+import io from 'socket.io-client'
 import { useEffect, useState } from 'react'
 let socket
 
