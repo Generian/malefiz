@@ -726,28 +726,28 @@ export const positions: Pos[] = [
   {
     id: 1001,
     x: 2,
-    y: -0.66,
+    y: -0.88,
     connections: [3],
     color: 'RED'
   },
   {
     id: 1002,
     x: 4,
-    y: -0.66,
+    y: -0.88,
     connections: [3],
     color: 'RED'
   },
   {
     id: 1003,
     x: 2.33,
-    y: -1.66,
+    y: -2,
     connections: [3],
     color: 'RED'
   },
   {
     id: 1004,
     x: 3.67,
-    y: -1.66,
+    y: -2,
     connections: [3],
     color: 'RED'
   },
@@ -761,28 +761,28 @@ export const positions: Pos[] = [
   {
     id: 1006,
     x: 6,
-    y: -0.66,
+    y: -0.88,
     connections: [7],
     color: 'GREEN'
   },
   {
     id: 1007,
     x: 8,
-    y: -0.66,
+    y: -0.88,
     connections: [7],
     color: 'GREEN'
   },
   {
     id: 1008,
     x: 6.33,
-    y: -1.66,
+    y: -2,
     connections: [7],
     color: 'GREEN'
   },
   {
     id: 1009,
     x: 7.67,
-    y: -1.66,
+    y: -2,
     connections: [7],
     color: 'GREEN'
   },
@@ -796,28 +796,28 @@ export const positions: Pos[] = [
   {
     id: 1011,
     x: 10,
-    y: -0.66,
+    y: -0.88,
     connections: [11],
     color: 'YELLOW'
   },
   {
     id: 1012,
     x: 12,
-    y: -0.66,
+    y: -0.88,
     connections: [11],
     color: 'YELLOW'
   },
   {
     id: 1013,
     x: 10.33,
-    y: -1.66,
+    y: -2,
     connections: [11],
     color: 'YELLOW'
   },
   {
     id: 1014,
     x: 11.67,
-    y: -1.66,
+    y: -2,
     connections: [11],
     color: 'YELLOW'
   },
@@ -831,28 +831,28 @@ export const positions: Pos[] = [
   {
     id: 1016,
     x: 14,
-    y: -0.66,
+    y: -0.88,
     connections: [15],
     color: 'BLUE'
   },
   {
     id: 1017,
     x: 16,
-    y: -0.66,
+    y: -0.88,
     connections: [15],
     color: 'BLUE'
   },
   {
     id: 1018,
     x: 14.33,
-    y: -1.66,
+    y: -2,
     connections: [15],
     color: 'BLUE'
   },
   {
     id: 1019,
     x: 15.67,
-    y: -1.66,
+    y: -2,
     connections: [15],
     color: 'BLUE'
   }

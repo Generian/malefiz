@@ -23,17 +23,17 @@
 }
 
 .RED {
-  color: red;
+  color: var(--red);
 }
 
 .GREEN {
-  color: green;
+  color: var(--green);
 }
 
 .YELLOW {
-  color: yellow;
+  color: var(--yellow);
 }
 
 .BLUE {
-  color: blue;
+  color: var(--blue);
 }

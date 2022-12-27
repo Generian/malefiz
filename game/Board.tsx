@@ -26,7 +26,7 @@ export const Board = ({
   return (
     <div
       className={styles.container}
-      style={{ minWidth: 17 * SPACING + POSITION_SIZE, minHeight: 16.66 * SPACING + POSITION_SIZE}}
+      style={{ minWidth: 17 * SPACING + POSITION_SIZE, minHeight: 17 * SPACING + POSITION_SIZE}}
     >
       <Decoration />
       {positions.map(pos => <Position 

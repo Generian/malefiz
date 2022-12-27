@@ -1,6 +1,6 @@
 export type PlayerColor = 'RED' | 'GREEN' | 'YELLOW' | 'BLUE'
 
-export const activeColors: PlayerColor[] = ['RED', 'BLUE']
+export const activeColors: PlayerColor[] = ['RED', 'BLUE', 'YELLOW', 'GREEN']
 
 export const nextPlayerColor = (activePlayerColor: PlayerColor) => {
   const colorOrder: PlayerColor[] = ['RED', 'GREEN', 'YELLOW', 'BLUE']
@@ -11,21 +11,4 @@ export const nextPlayerColor = (activePlayerColor: PlayerColor) => {
   const nextPlayerColor = activeColorOrder[(index + 1) % (activeColorOrder.length )]
 
   return nextPlayerColor
-
-  switch (activePlayerColor) {
-    case 'RED':
-      return 'GREEN'
-
-    case 'GREEN':
-      return 'YELLOW'
-
-    case 'YELLOW':
-      return 'BLUE'
-
-    case 'BLUE':
-      return 'RED'
-
-    default:
-      throw new Error("Unexpected player color given.")
-  }
 }
