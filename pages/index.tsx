@@ -1,8 +1,17 @@
 import Head from 'next/head'
 import styles from '../styles/Home.module.css'
-import io from 'socket.io-client'
-import { useEffect, useState } from 'react'
-let socket
+import { io, Socket } from "socket.io-client"
+import { ChangeEvent, SetStateAction, useEffect, useState } from 'react'
+
+export interface ServerToClientEvents {
+  receiveInput: (msg: string) => void;
+}
+
+export interface ClientToServerEvents {
+  sendInput: (msg: string) => void;
+}
+
+let socket: Socket<ServerToClientEvents, ClientToServerEvents> = io()
 
 export default function Home() {
   const [input, setInput] = useState('')
@@ -17,15 +26,15 @@ export default function Home() {
       console.log('connected')
     })
 
-    socket.on('update-input', msg => {
+    socket.on('receiveInput', msg => {
       setInput(msg)
     })
   }
 
-  const onChangeHandler = (e) => {
+  const onChangeHandler = (e: ChangeEvent<HTMLInputElement>) => {
     console.log("new message")
     setInput(e.target.value)
-    socket.emit('input-change', e.target.value)
+    socket.emit('sendInput', e.target.value)
   }
   
   return (
