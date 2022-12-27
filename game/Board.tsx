@@ -3,7 +3,9 @@ import { positions } from 'src/game/resources/positions'
 import { Position } from './Position'
 import { Piece } from './Game'
 import { PieceMarker } from './PieceMarker'
-import { PIECE_SIZE, POSITION_SIZE, SPACING } from './resources/styles'
+import { POSITION_SIZE, SPACING } from './resources/styles'
+import { Decoration } from './Decoration'
+
 
 interface BoardProps {
   pieces: Piece[],
@@ -26,6 +28,7 @@ export const Board = ({
       className={styles.container}
       style={{ minWidth: 17 * SPACING + POSITION_SIZE, minHeight: 16.66 * SPACING + POSITION_SIZE}}
     >
+      <Decoration />
       {positions.map(pos => <Position 
         key={pos.id}
         id={pos.id}

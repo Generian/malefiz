@@ -2,8 +2,9 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background-color: black;
+  background-color: var(--positionsColor);
   box-sizing: border-box;
+  box-shadow: rgba(0, 0, 0, 0.15) 1.95px 1.95px 2.6px;
 }
 
 .default div {
@@ -12,32 +13,37 @@
 
 .default div p {
   font-size: small;
+  color: red;
 }
 
 .highlightMovePosition {
-  background-color: lightgrey!important;
+  background-color: var(--highlightColor)!important;
 }
 
 .BLOCK_MARKER {
-  background-color: orange;
+  background-color: var(--blockMarkerColor);
 }
 
 .FINISH {
-  background-color: gold;
+  background-color: transparent;
 }
 
 .RED {
-  background-color: var(--lightRed);
+  background-color: var(--red);
+  border: 3px solid white;
 }
 
 .GREEN {
-  background-color: var(--lightGreen);
+  background-color: var(--green);
+  border: 3px solid black;
 }
 
 .YELLOW {
-  background-color: var(--lightYellow);
+  background-color: var(--yellow);
+  border: 3px solid black;
 }
 
 .BLUE {
-  background-color: var(--lightBlue);
+  background-color: var(--blue);
+  border: 3px solid white;
 }

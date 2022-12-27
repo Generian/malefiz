@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import styles from 'styles/Game.module.css'
 import { DiceRoller } from 'src/game/Dice'
 import { Board } from './Board'
-import { nextPlayerColor, PlayerColor } from './resources/playerColors'
+import { activeColors, nextPlayerColor, PlayerColor } from './resources/playerColors'
 import { defaultBlocks, getResetPiecePosition, initialisePieces, positions, winningPosId } from './resources/positions'
 import { getAvailableMovePaths } from './resources/routing'
 
@@ -20,7 +20,7 @@ interface GameProps {
 
 export const Game = ({  }: GameProps) => {
   const [gameState, setGamestate] = useState<GameStates>('ROLL_DICE')
-  const [activePlayerColor, setActivePlayerColor] = useState<PlayerColor>('RED')
+  const [activePlayerColor, setActivePlayerColor] = useState<PlayerColor>(activeColors[0])
   const [diceValue, setDiceValue] = useState<number | undefined>(1)
   const [blocks, setBlocks] = useState<number[]>(defaultBlocks)
   const [pieces, setPieces] = useState<Piece[]>(initialisePieces())
@@ -34,7 +34,7 @@ export const Game = ({  }: GameProps) => {
       setDiceValue(value)
       setGamestate('SELECT_PIECE')
     } else {
-      throw new Error("Rolled dice when not expected")
+      console.warn("Rolled dice when not expected")
     }
   }
 
@@ -137,7 +137,7 @@ export const Game = ({  }: GameProps) => {
         <div className={styles.default}>
           <span className={`${styles[activePlayerColor]} ${styles.bold}`}>{activePlayerColor}</span><span> to play and </span><span className={styles.bold}>{gameState}</span><span>.</span>
         </div>
-        <DiceRoller diceValue={diceValue} setDiceValue={playerRolledDice} isActive={gameState == 'ROLL_DICE'}/>
+        <DiceRoller setDiceValue={playerRolledDice} disabled={gameState != 'ROLL_DICE'}/>
         {debugMode && <button onClick={() => console.log("pieces:", pieces)}>Print pieces</button>}
       </div>
     </div>

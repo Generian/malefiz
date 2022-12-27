@@ -1,20 +1,22 @@
 .default {
   background-color: violet;
   box-sizing: border-box;
+  box-shadow: rgba(0, 0, 0, 0.4) 0px 2px 4px, rgba(0, 0, 0, 0.3) 0px 7px 13px -3px, rgba(0, 0, 0, 0.2) 0px -3px 0px inset;
+  border: 2px solid var(--positionsColor);
 }
 
 .RED {
-  background-color: red;
+  background-color: var(--red);
 }
 
 .GREEN {
-  background-color: green;
+  background-color: var(--green);
 }
 
 .YELLOW {
-  background-color: yellow;
+  background-color: var(--yellow);
 }
 
 .BLUE {
-  background-color: blue;
+  background-color: var(--blue);
 }

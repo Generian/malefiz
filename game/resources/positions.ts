@@ -1,5 +1,5 @@
 import { Piece } from "../Game"
-import { PlayerColor } from "./playerColors"
+import { activeColors, PlayerColor } from "./playerColors"
 
 export interface Pos {
   id: number,
@@ -17,10 +17,10 @@ export const BluePlayerPositions: number[] = [1015, 1016, 1017, 1018, 1019]
 
 export const initialisePieces = () => {
   const players: Piece[] = []
-  RedPlayerPositions.forEach(p => players.push({ pos: p, color: 'RED'}))
-  GreenPlayerPositions.forEach(p => players.push({ pos: p, color: 'GREEN'}))
-  YellowPlayerPositions.forEach(p => players.push({ pos: p, color: 'YELLOW'}))
-  BluePlayerPositions.forEach(p => players.push({ pos: p, color: 'BLUE'}))
+  activeColors.includes('RED') && RedPlayerPositions.forEach(p => players.push({ pos: p, color: 'RED'}))
+  activeColors.includes('GREEN') && GreenPlayerPositions.forEach(p => players.push({ pos: p, color: 'GREEN'}))
+  activeColors.includes('YELLOW') && YellowPlayerPositions.forEach(p => players.push({ pos: p, color: 'YELLOW'}))
+  activeColors.includes('BLUE') && BluePlayerPositions.forEach(p => players.push({ pos: p, color: 'BLUE'}))
 
   return players
 }
@@ -329,19 +329,13 @@ export const positions: Pos[] = [
     id: 50,
     x: 8,
     y: 5,
-    connections: [49, 51]
-  },
-  {
-    id: 51,
-    x: 9,
-    y: 5,
-    connections: [50, 52]
+    connections: [49, 52]
   },
   {
     id: 52,
     x: 9,
     y: 5,
-    connections: [51, 53]
+    connections: [50, 53]
   },
   {
     id: 53,
@@ -507,7 +501,7 @@ export const positions: Pos[] = [
     id: 79,
     x: 2,
     y: 11,
-    connections: [78, 80]
+    connections: [78, 81]
   },
   {
     id: 81,
@@ -718,7 +712,7 @@ export const positions: Pos[] = [
   {
     id: 115,
     x: 9,
-    y: 14,
+    y: 14.13,
     connections: [106],
     type: 'FINISH'
   },
