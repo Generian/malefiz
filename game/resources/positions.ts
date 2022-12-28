@@ -1,4 +1,4 @@
-import { Piece } from "../Game"
+import { Piece } from "./gameTypes"
 import { activeColors, PlayerColor } from "./playerColors"
 
 export interface Pos {
