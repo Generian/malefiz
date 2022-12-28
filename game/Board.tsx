@@ -1,10 +1,10 @@
 import styles from 'styles/Board.module.css'
 import { positions } from 'src/game/resources/positions'
 import { Position } from './Position'
-import { Piece } from './Game'
 import { PieceMarker } from './PieceMarker'
 import { POSITION_SIZE, SPACING } from './resources/styles'
 import { Decoration } from './Decoration'
+import { Piece } from './resources/gameTypes'
 
 
 interface BoardProps {
@@ -32,7 +32,7 @@ export const Board = ({
       {positions.map(pos => <Position 
         key={pos.id}
         id={pos.id}
-        blocked={blocks.includes(pos.id)}
+        blocked={blocks?.includes(pos.id)}
         highlightMovePosition={fieldsToHighlight && fieldsToHighlight.includes(pos.id)}
         handleClick={handleClick}
       >

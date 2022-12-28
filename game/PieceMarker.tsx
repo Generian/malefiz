@@ -1,10 +1,10 @@
 import styles from 'styles/PieceMarker.module.css'
-import { Piece } from './Game'
+import { Piece } from './resources/gameTypes'
 import { PIECE_SIZE } from './resources/styles'
 
 interface PieceMarker {
   piece: Piece
-  handleClick: any
+  handleClick: (piece: Piece) => void
 }
 
 export const PieceMarker = ({ piece, handleClick }: PieceMarker) => {

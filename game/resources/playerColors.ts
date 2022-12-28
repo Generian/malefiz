@@ -1,6 +1,6 @@
 export type PlayerColor = 'RED' | 'GREEN' | 'YELLOW' | 'BLUE'
 
-export const activeColors: PlayerColor[] = ['RED', 'BLUE', 'YELLOW', 'GREEN']
+export const activeColors: PlayerColor[] = ['RED', 'GREEN']
 
 export const nextPlayerColor = (activePlayerColor: PlayerColor) => {
   const colorOrder: PlayerColor[] = ['RED', 'GREEN', 'YELLOW', 'BLUE']
