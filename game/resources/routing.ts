@@ -1,4 +1,4 @@
-import { Piece } from "../Game"
+import { Piece } from "./gameTypes"
 import { PlayerColor } from "./playerColors"
 import { positions } from "./positions"
 
