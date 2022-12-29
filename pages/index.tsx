@@ -3,9 +3,13 @@ import styles from '../styles/Home.module.css'
 import { io, Socket } from "socket.io-client"
 import { useEffect, useState } from 'react'
 import { getCookie, getUuid } from 'src/utils/helper'
-import { PlayerColor } from 'src/game/resources/playerColors'
+import { activeColors, PlayerColor } from 'src/game/resources/playerColors'
 import { useRouter } from 'next/router';
 import { ClientToServerEvents, ServerToClientEvents } from 'src/utils/socketHelpers'
+import { Game } from './api/socket'
+import { Button, Checkbox, FormControlLabel, FormGroup } from '@mui/material'
+import PageFrame from 'src/components/PageFrame'
+import { LobbyComp } from 'src/components/lobby/Lobby'
 
 export interface Player {
   uuid: string
@@ -22,6 +26,7 @@ let socket: Socket<ServerToClientEvents, ClientToServerEvents>
 
 export default function Home() {
   const [lobbies, setLobbies] = useState<Lobby[]>([])
+  const [games, setGames] = useState<Game[]>([])
 
   const router = useRouter()
 
@@ -50,8 +55,9 @@ export default function Home() {
       }
     })
 
-    socket.on('updateLobbies', lobbies => {
+    socket.on('updateLobbies', (lobbies, games) => {
       setLobbies(lobbies)
+      games && setGames(games)
     })
 
     socket.on('triggerGameStart', (lobbyId, players) => {
@@ -73,10 +79,13 @@ export default function Home() {
     socket.emit('leaveLobby', lobbyId, getUuid())
   }
 
-  const handleUsernameChange = () => {
-    console.log("new message")
+  const handleUsernameChange = (lobbyId?: string) => {
     const input = document.getElementById('usernameInput') as HTMLInputElement
-    socket.emit('updateUsername', input.value)
+    socket.emit('updateUsername', input.value, getUuid(), lobbyId)
+  }
+
+  const handleChangePlayerColor = (lobbyId: string) => {
+    socket.emit('changePlayerColor', lobbyId, getUuid())
   }
 
   const isPlayerInALobby = (lobbyId?: string) => {
@@ -88,54 +97,51 @@ export default function Home() {
     return allPlayers.includes(getUuid())
   }
 
-  const startGame = (lobbyId: string) => {
+  const startSingleplayerGame = () => {
+    const params = ['r', 'g', 'y', 'b']
+    const colors = activeColors().map(c => {
+      const checkbox = document.getElementById(c) as HTMLInputElement
+      return checkbox?.checked
+    })
+
+    if (!colors.find(c => c) || !colors.filter(c => c == false).length) {
+      router.push('/play')
+      return
+    }
+    router.push(`/play?${colors.map((c, i) => c ? `${params[i]}=1&` : '').join('')}`)
+  }
+
+  const startMultiplayerGame = (lobbyId: string) => {
     socket.emit('startGame', lobbyId, getUuid())
   }
   
   return (
-    <>
-      <Head>
-        <title>Play Malefiz online</title>
-        <meta name="description" content="Play Malefiz online" />
-        <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <link rel="icon" href="/favicon.ico" />
-      </Head>
-      <main className={styles.main}>
+    <PageFrame>
+      <div className={styles.container}>
         <div>
-          <span>Lobbies</span>
-          {lobbies.map(l => <div key={l.id} style={{ border: "1px solid black"}}>
-            <p>{l.id}</p>
-            <p>Players:</p>
-            {l.players.map(p => {
-              if (p.uuid == getCookie('uuid')) {
-                return <div key={p.uuid}>
-                  <span>{p.color}</span>
-                  <input
-                    id="usernameInput"
-                    placeholder={p.username}
-                  />
-                  <button onClick={handleUsernameChange}>Submit</button>
-                </div>
-              } else {
-                return <div key={p.uuid}>
-                  <span>{p.color}</span><span>{p.username}</span>
-                </div>
-              }
-            })}
-            {!isPlayerInALobby(l.id) && <button 
-              onClick={() => joinLobby(l.id)}
-              disabled={l.players.length > 3}
-            >Join Lobby</button>}
-            {isPlayerInALobby(l.id) && <button
-              onClick={() => leaveLobby(l.id)}
-            >Leave Lobby</button>}
-            {(l.players.length >= 2 && isPlayerInALobby(l.id)) && <button
-              onClick={() => startGame(l.id)}
-            >Start Game</button>}
+          {activeColors().map(c => <div key={c}>
+            <input type="checkbox" id={c} name={c} defaultChecked/>
+            <label htmlFor={c}>{c}</label>
           </div>)}
-          {!isPlayerInALobby() && <button onClick={createLobby}>Create Lobby</button>}
+          <button onClick={startSingleplayerGame}>Start Game</button>
         </div>
-      </main>
-    </>
+        <span>Lobbies</span>
+        {lobbies.map(l => <LobbyComp 
+          key={l.id}
+          lobby={l}
+          handleChangePlayerColor={handleChangePlayerColor}
+          handleUsernameChange={handleUsernameChange}
+          joinLobby={joinLobby}
+          leaveLobby={leaveLobby}
+          startMultiplayerGame={startMultiplayerGame}
+          isPlayerInALobby={isPlayerInALobby}
+        />)}
+        {!isPlayerInALobby() && <button onClick={createLobby}>Create Lobby</button>}
+        <span>Games</span>
+        {games?.map((g, i) => <div key={g.lobbyId}>
+          <span onClick={() => router.push(`/play?lid=${g.lobbyId}`)}>Game {i + 1}</span>
+        </div>)}
+      </div>
+    </PageFrame>
   )
 }

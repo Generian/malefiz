@@ -1,4 +1,5 @@
 .connection {
   border: 3px solid var(--lines);
+  background-color: var(--lines);
   position: absolute;
 }

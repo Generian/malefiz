@@ -6,7 +6,7 @@ import type { Server as IOServer } from 'socket.io'
 import { v4 } from 'uuid'
 import { Lobby, Player } from '..'
 import { createLobbyId } from 'src/utils/helper'
-import { PlayerColor } from 'src/game/resources/playerColors'
+import { nextPlayerColor, PlayerColor } from 'src/game/resources/playerColors'
 import { GameStates, Piece } from 'src/game/resources/gameTypes'
 
 interface SocketServer extends HTTPServer {
@@ -30,10 +30,18 @@ interface Players {
   [key: string]: User
 }
 
-interface Game {
+export interface Game {
+  lobbyId: string
   players: Player[]
   activePlayerColor: PlayerColor
   turn: number
+  data?: {
+    state: GameStates, 
+    activePlayer: PlayerColor, 
+    dice: number | undefined, 
+    blockers: number[], 
+    playerPieces: Piece[]
+  }
 }
 
 interface Games {
@@ -93,6 +101,7 @@ const SocketHandler = (_: NextApiRequest, res: NextApiResponseWithSocket) => {
 
       // Set user uuid
       socket.on('requestUuid', uuid => {
+        let newUuid = uuid
         if (uuid) {
           const player = players[uuid]
           if (player) {
@@ -104,18 +113,28 @@ const SocketHandler = (_: NextApiRequest, res: NextApiResponseWithSocket) => {
                 sockets: [...player.sockets, socket.id]
               }
             }
+          } else {
+            players[uuid] = {
+              sockets: [socket.id]
+            }
           }
-          socket.emit('receiveUuid', uuid)
         } else {
-          const newUuid = v4()
+          newUuid = v4()
           players[newUuid] = {
             sockets: [socket.id]
           }
-          socket.emit('receiveUuid', newUuid)
         }
 
+        socket.emit('receiveUuid', newUuid)
+
         // Initialise user with data
-        io.emit('updateLobbies', lobbies)
+        io.emit('updateLobbies', lobbies, Object.values(games))
+
+        // Find lobby player might be in and send game data
+        const game = Object.values(games).find(g => g.players.map(p => p.uuid).includes(newUuid))
+        if (game && game.data) {
+          socket.emit('receiveGameUpdate', game.lobbyId, game.data.state, game.data.activePlayer, game.data.dice, game.data.blockers, game.data.playerPieces)
+        }
       })
 
       // Lobbies handling
@@ -167,11 +186,49 @@ const SocketHandler = (_: NextApiRequest, res: NextApiResponseWithSocket) => {
         io.emit('updateLobbies', lobbies)
       })
 
+      socket.on('updateUsername', (userName: string, uuid: string, lobbyId: string | undefined) => {
+        if (!userName || !uuid) return
+
+        players[uuid].username = userName
+
+        let newLobby = !!lobbyId && getLobbyById(lobbyId)
+
+        if (newLobby) {
+          const newPlayer = newLobby?.players?.filter(p => p.uuid == uuid)[0]
+          newLobby.players.splice(newLobby.players.indexOf(newPlayer), 1, {
+            ...newPlayer,
+            username: userName
+          })
+
+          // Update lobbies
+          updateLobbyInLobbies(newLobby)
+          io.emit('updateLobbies', lobbies)
+        }
+      })
+
+      socket.on('changePlayerColor', (lobbyId: string, uuid: string) => {
+        const newLobby = getLobbyById(lobbyId)
+        const newPlayer = newLobby?.players?.filter(p => p.uuid == uuid)[0]
+        const freeColors = getFreeColors(lobbyId)
+        const nextColor = nextPlayerColor(newPlayer.color, [...freeColors, newPlayer.color])
+
+        newLobby.players.splice(newLobby.players.indexOf(newPlayer), 1, {
+          ...newPlayer,
+          color: nextColor
+        })
+
+        // Update lobbies
+        updateLobbyInLobbies(newLobby)
+
+        io.emit('updateLobbies', lobbies)
+      })
+
       socket.on('startGame', (lobbyId: string, uuid: string) => {
         const lobby = getLobbyById(lobbyId)
 
         if (!games[lobbyId]) {
           games[lobbyId] = {
+            lobbyId: lobbyId,
             players: lobby.players,
             activePlayerColor: lobby.players.map(p => p.color)[0],
             turn: 1
@@ -183,10 +240,16 @@ const SocketHandler = (_: NextApiRequest, res: NextApiResponseWithSocket) => {
       })
 
       // Game interaction
-      socket.on('getGameValidityAndColor', (lobbyId: string, uuid: string) => {
+      socket.on('getGameValidityAndColors', (lobbyId: string, uuid: string) => {
         const game = games[lobbyId]
-        const playerColor = game?.players?.filter(p => p.uuid == uuid)[0].color
-        socket.emit('getGameValidityAndColor', !!game && playerColor, playerColor, game.activePlayerColor)
+        const playerColor = game?.players?.filter(p => p.uuid == uuid)[0]?.color
+
+        socket.emit('getGameValidityAndColors', !!game, playerColor, game?.activePlayerColor, game?.players?.map(p => p.color), game?.turn > 1)
+
+        // Find lobby player might be in and send game data
+        if (game && game.data) {
+          socket.emit('receiveGameUpdate', game.lobbyId, game.data.state, game.data.activePlayer, game.data.dice, game.data.blockers, game.data.playerPieces)
+        }
       })
 
       socket.on('updateServerWithGameState', (
@@ -205,6 +268,13 @@ const SocketHandler = (_: NextApiRequest, res: NextApiResponseWithSocket) => {
         if (game && player && itsPlayersTurn) {
           games[lobbyId].activePlayerColor = activePlayer
           games[lobbyId].turn += 1
+          game.data = {
+            state,
+            activePlayer,
+            dice,
+            blockers,
+            playerPieces
+          }
           socket.broadcast.emit('receiveGameUpdate', lobbyId, state, activePlayer, dice, blockers, playerPieces)
         } else {
           console.error("Error executing turn!", game, lobbyId, player, uuid, itsPlayersTurn)
@@ -213,8 +283,8 @@ const SocketHandler = (_: NextApiRequest, res: NextApiResponseWithSocket) => {
 
       // Handle disconnect
       socket.on('disconnect', () => {
-        console.log('user disconnected');
-      });
+        console.log('user disconnected')
+      })
     })
   }
   res.end()

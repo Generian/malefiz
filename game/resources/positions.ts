@@ -1,5 +1,5 @@
 import { Piece } from "./gameTypes"
-import { activeColors, PlayerColor } from "./playerColors"
+import { PlayerColor } from "./playerColors"
 
 export interface Pos {
   id: number,
@@ -15,7 +15,7 @@ export const GreenPlayerPositions: number[] = [1005, 1006, 1007, 1008, 1009]
 export const YellowPlayerPositions: number[] = [1010, 1011, 1012, 1013, 1014]
 export const BluePlayerPositions: number[] = [1015, 1016, 1017, 1018, 1019]
 
-export const initialisePieces = () => {
+export const initialisePieces = (activeColors: PlayerColor[]) => {
   const players: Piece[] = []
   activeColors.includes('RED') && RedPlayerPositions.forEach(p => players.push({ pos: p, color: 'RED'}))
   activeColors.includes('GREEN') && GreenPlayerPositions.forEach(p => players.push({ pos: p, color: 'GREEN'}))

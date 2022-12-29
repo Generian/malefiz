@@ -15,36 +15,38 @@ export const debugMode = false
 
 let socket: Socket<ServerToClientEvents, ClientToServerEvents>
 
-interface GameProps {
-
-}
-
-export const Game = ({  }: GameProps) => {
+export const Game = () => {
   const router = useRouter()
-  const { lid } = router.query
+  const { lid, r, g, y, b } = router.query
 
   const [gameState, setGamestate] = useState<GameStates>('ROLL_DICE')
-  const [activePlayerColor, setActivePlayerColor] = useState<PlayerColor>(activeColors[0])
+  const [playerColors, setPlayerColors] = useState<PlayerColor[]>()
+  const [activePlayerColor, setActivePlayerColor] = useState<PlayerColor>()
   const [diceValue, setDiceValue] = useState<number | undefined>()
   const [blocks, setBlocks] = useState<number[]>(defaultBlocks)
-  const [pieces, setPieces] = useState<Piece[]>(initialisePieces())
+  const [pieces, setPieces] = useState<Piece[]>()
   const [activePiece, setActivePiece] = useState<Piece>()
 
   // Multiplayer states
-  const [isLobby, setIsLobby] = useState(!!lid)
   const [myColor, setMyColor] = useState<PlayerColor>()
 
-  useEffect(() => {
-    initialiseMultiplayerGame()
-  }, [])
+  useEffect(() => initialiseMultiplayerGame(), [lid])
 
   useEffect(() => {
-    console.log("New dice value:", diceValue)
-  }, [diceValue])
+    if (!lid) {
+      const colorsFromParams = activeColors(!!r, !!g, !!y, !!b)
+      const colorsToInitialiseGame = colorsFromParams.length ? colorsFromParams : activeColors(true, true, true, true)
+  
+      setPlayerColors(colorsToInitialiseGame)
+      setActivePlayerColor(colorsToInitialiseGame[0])
+      setPieces(initialisePieces(colorsToInitialiseGame))
+    }
+  }, [router.query])
 
-  const myTurn = () => (myColor == activePlayerColor) || !isLobby
+  const myTurn = () => (myColor == activePlayerColor) || !lid
 
   const socketInitializer = async () => {
+    console.log("Initialising socket")
     await fetch('/api/socket')
     socket = io()
 
@@ -65,22 +67,32 @@ export const Game = ({  }: GameProps) => {
       } else {
         console.error("Received a mismatching uuid. Unexpected error.")
       }
+
+      if (typeof lid == 'string') {
+        console.log("getting init data", lid, getUuid(), socket)
+        socket.emit('getGameValidityAndColors', lid, getUuid())
+      } else {
+        console.error("no lobby ID yet")
+      }
     })
 
-    socket.on('getGameValidityAndColor', (lobbyValid, playerColor, activePlayerColor) => {
+    socket.on('getGameValidityAndColors', (lobbyValid, playerColor, activePlayerColor, allPlayerColors, isInPlay) => {
+      console.log("received validity data")
       if (!lobbyValid) {
         console.error("Game lobby ID is not valid.", playerColor)
         router.push('/')
       } else {
-        setMyColor(playerColor)
-        setActivePlayerColor(activePlayerColor)
+        playerColor && setMyColor(playerColor)
+        setPlayerColors(allPlayerColors)
+        if (!isInPlay) {
+          setActivePlayerColor(activePlayerColor)
+          setPieces(initialisePieces(allPlayerColors))
+        }
       }
     })
 
     socket.on('receiveGameUpdate', (lobbyId, state, activePlayer, dice, blockers, playerPieces) => {
-      console.log("received new state")
       if (lobbyId == lid) {
-        console.log("updating new state")
         setGamestate(state)
         setActivePlayerColor(activePlayer)
         setDiceValue(dice)
@@ -88,24 +100,23 @@ export const Game = ({  }: GameProps) => {
         setPieces(playerPieces)
       }
     })
-
   }
 
   // Multiplayer interaction
-  const initialiseMultiplayerGame = async () => {
+  const initialiseMultiplayerGame = () => {
     if (typeof lid == 'string') {
-      await socketInitializer()
-      socket.emit('getGameValidityAndColor', lid, getUuid())
+      socketInitializer()
     }
   }
 
   const updateServerWithGameState = (
     state: GameStates = gameState,
-    activePlayer: PlayerColor = activePlayerColor,
+    activePlayer: PlayerColor | undefined = activePlayerColor,
     dice: number | undefined = diceValue,
     blockers: number[] = blocks,
-    playerPieces: Piece[] = pieces
+    playerPieces: Piece[] | undefined = pieces
   ) => {
+    if (!activePlayer || !playerPieces) return
     if (typeof lid == 'string') {
       socket.emit('updateServerWithGameState', lid, getUuid(), state, activePlayer, dice, blockers, playerPieces)
     }
@@ -139,6 +150,7 @@ export const Game = ({  }: GameProps) => {
   }
 
   const moveActivePiece = (posId: number) => {
+    if (!activePlayerColor || !pieces || !playerColors) return
     const moveOptions = !!diceValue && !!activePiece && getAvailableMovePaths(activePiece.pos, activePlayerColor, diceValue, blocks, pieces).map(p => p[p.length - 1])
     debugMode && console.log("Available paths:", moveOptions)
     if (!!moveOptions && moveOptions.includes(posId)) {
@@ -160,7 +172,7 @@ export const Game = ({  }: GameProps) => {
       }
   
       if (diceValue != 6 && !blocks.includes(posId)) {
-        newActivePlayerColor = nextPlayerColor(activePlayerColor)
+        newActivePlayerColor = nextPlayerColor(activePlayerColor, playerColors)
         newDiceValue = undefined
       }
       
@@ -169,7 +181,7 @@ export const Game = ({  }: GameProps) => {
 
       // Win condition
       if (posId == winningPosId) {
-        setGamestate('END')
+        newGameState = 'END'
       }
 
       // Update states
@@ -185,6 +197,7 @@ export const Game = ({  }: GameProps) => {
   }
 
   const moveBlock = (posId: number) => {
+    if (!activePlayerColor || !pieces || !playerColors) return
     const moveOptions = positions
       .filter(p => p.y > 1) // Filter out first rows
       .map(p => p.id)
@@ -194,13 +207,14 @@ export const Game = ({  }: GameProps) => {
     if (moveOptions.includes(posId)) {
       let newActivePlayerColor: PlayerColor = activePlayerColor
       if (diceValue != 6) {
-        newActivePlayerColor = nextPlayerColor(activePlayerColor)
+        newActivePlayerColor = nextPlayerColor(activePlayerColor, playerColors)
       }
 
       let newBlocks: number[] = [...blocks, posId]
       setBlocks(newBlocks)
       setGamestate('ROLL_DICE')
       setDiceValue(undefined)
+      setActivePlayerColor(newActivePlayerColor)
 
       updateServerWithGameState('ROLL_DICE', newActivePlayerColor, undefined, newBlocks)
     } else {
@@ -213,7 +227,7 @@ export const Game = ({  }: GameProps) => {
     switch (gameState) {
       case 'MOVE_PIECE':
         moveActivePiece(posId)
-        break;
+        break
 
       case 'MOVE_BLOCK':
         moveBlock(posId)
@@ -221,31 +235,33 @@ export const Game = ({  }: GameProps) => {
     
       default:
         console.warn("Unexpected click on board")
-        break;
+        break
     }
 
   }
 
   return (
     <div className={styles.container}>
-      <Board 
-        pieces={pieces}
-        paths={!!diceValue && !!activePiece && gameState == 'MOVE_PIECE' && getAvailableMovePaths(activePiece.pos, activePlayerColor, diceValue, blocks, pieces)}
-        handleClick={handleClick}
-        handlePieceClick={playerSelectedPiece}
-        blocks={blocks}
-      />
-      <div className={styles.infoContainer}>
-        {gameState == 'END' && <div className={styles.default}>
-          <span>Winner: {pieces.filter(p => p.pos == winningPosId)[0].color}</span>
-        </div>}
-        {myColor && <div className={styles.default}><span>Your color: </span><span className={`${styles[myColor]} ${styles.bold}`}>{myColor}</span></div>}
-        <div className={styles.default}>
-          <span className={`${styles[activePlayerColor]} ${styles.bold}`}>{activePlayerColor}</span>{(gameState == 'MOVE_PIECE' || gameState == 'SELECT_PIECE') ? ` rolled ${diceValue} and` : ''}<span> should </span><span className={styles.bold}>{gameState}</span><span>.</span>
+      {(activePlayerColor && pieces && playerColors) && <>
+        <Board 
+          pieces={pieces}
+          paths={!!diceValue && !!activePiece && gameState == 'MOVE_PIECE' && getAvailableMovePaths(activePiece.pos, activePlayerColor, diceValue, blocks, pieces)}
+          handleClick={handleClick}
+          handlePieceClick={playerSelectedPiece}
+          blocks={blocks}
+        />
+        <div className={styles.infoContainer}>
+          {gameState == 'END' && <div className={styles.default}>
+            <span>Winner: {pieces.filter(p => p.pos == winningPosId)[0].color}</span>
+          </div>}
+          {myColor && <div className={styles.default}><span>Your color: </span><span className={`${styles[myColor]} ${styles.bold}`}>{myColor}</span></div>}
+          <div className={styles.default}>
+            <span className={`${styles[activePlayerColor]} ${styles.bold}`}>{activePlayerColor}</span>{(gameState == 'MOVE_PIECE' || gameState == 'SELECT_PIECE') ? ` rolled ${diceValue} and` : ''}<span> should </span><span className={styles.bold}>{gameState}</span><span>.</span>
+          </div>
+          {myTurn() && <DiceRoller setDiceValue={playerRolledDice}/>}
+          {debugMode && <button onClick={() => console.log("pieces:", pieces)}>Print pieces</button>}
         </div>
-        <DiceRoller setDiceValue={playerRolledDice} disabled={gameState != 'ROLL_DICE'}/>
-        {debugMode && <button onClick={() => console.log("pieces:", pieces)}>Print pieces</button>}
-      </div>
+      </>}
     </div>
   )
 }
