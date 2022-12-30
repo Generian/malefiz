@@ -7,7 +7,7 @@ import { activeColors, PlayerColor } from 'src/game/resources/playerColors'
 import { useRouter } from 'next/router';
 import { ClientToServerEvents, ServerToClientEvents } from 'src/utils/socketHelpers'
 import { Game } from './api/socket'
-import { Button, Checkbox, FormControlLabel, FormGroup } from '@mui/material'
+import { Button, Checkbox, FormControlLabel, FormGroup, Typography } from '@mui/material'
 import PageFrame from 'src/components/PageFrame'
 import { LobbyComp } from 'src/components/lobby/Lobby'
 
@@ -125,22 +125,32 @@ export default function Home() {
           </div>)}
           <button onClick={startSingleplayerGame}>Start Game</button>
         </div>
-        <span>Lobbies</span>
-        {lobbies.map(l => <LobbyComp 
-          key={l.id}
-          lobby={l}
-          handleChangePlayerColor={handleChangePlayerColor}
-          handleUsernameChange={handleUsernameChange}
-          joinLobby={joinLobby}
-          leaveLobby={leaveLobby}
-          startMultiplayerGame={startMultiplayerGame}
-          isPlayerInALobby={isPlayerInALobby}
-        />)}
-        {!isPlayerInALobby() && <button onClick={createLobby}>Create Lobby</button>}
-        <span>Games</span>
-        {games?.map((g, i) => <div key={g.lobbyId}>
-          <span onClick={() => router.push(`/play?lid=${g.lobbyId}`)}>Game {i + 1}</span>
-        </div>)}
+        <div className={styles.container_l2}>
+          <div className={styles.container_l3}>
+            <Typography variant="h4">
+              Lobbies
+            </Typography>
+            {lobbies.map(l => <LobbyComp 
+              key={l.id}
+              lobby={l}
+              handleChangePlayerColor={handleChangePlayerColor}
+              handleUsernameChange={handleUsernameChange}
+              joinLobby={joinLobby}
+              leaveLobby={leaveLobby}
+              startMultiplayerGame={startMultiplayerGame}
+              isPlayerInALobby={isPlayerInALobby}
+            />)}
+          {!isPlayerInALobby() && <button onClick={createLobby}>Create Lobby</button>}
+          </div>
+          <div className={styles.container_l3}>
+            <Typography variant="h4">
+              Games
+            </Typography>
+            {games?.map((g, i) => <div key={g.lobbyId}>
+              <span onClick={() => router.push(`/play?lid=${g.lobbyId}`)}>Game {i + 1}</span>
+            </div>)}
+          </div>
+        </div>
       </div>
     </PageFrame>
   )
