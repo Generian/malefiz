@@ -1,3 +1,5 @@
+import { PublicPlayer } from "src/pages"
+
 export type PlayerColor = 'RED' | 'GREEN' | 'YELLOW' | 'BLUE'
 
 export const activeColors = (red: boolean = true, green: boolean = true, yellow: boolean = true, blue: boolean = true) => {
@@ -7,7 +9,14 @@ export const activeColors = (red: boolean = true, green: boolean = true, yellow:
   yellow && colors.push('YELLOW')
   blue && colors.push('BLUE')
 
-  return colors
+  const publicPlayers = colors.map((c, i) => {
+    return {
+      username: `Player ${i+1}`,
+      color: c
+    }
+  })
+
+  return publicPlayers
 }
 
 export const nextPlayerColor = (activePlayerColor: PlayerColor, activeColors: PlayerColor[]) => {

@@ -1,18 +1,24 @@
-import Head from 'next/head'
 import styles from '../styles/Home.module.css'
 import { io, Socket } from "socket.io-client"
 import { useEffect, useState } from 'react'
-import { getCookie, getUuid } from 'src/utils/helper'
-import { activeColors, PlayerColor } from 'src/game/resources/playerColors'
+import { getUuid } from 'src/utils/helper'
+import { PlayerColor } from 'src/game/resources/playerColors'
 import { useRouter } from 'next/router';
 import { ClientToServerEvents, ServerToClientEvents } from 'src/utils/socketHelpers'
 import { Game } from './api/socket'
-import { Button, Checkbox, FormControlLabel, FormGroup, Typography } from '@mui/material'
 import PageFrame from 'src/components/PageFrame'
 import { LobbyComp } from 'src/components/lobby/Lobby'
+import Image from 'next/image'
+import title_image from '../public/title_image.png'
+import lobbyBackground_image from '../public/lobbyBackground.png'
 
 export interface Player {
   uuid: string
+  username: string
+  color: PlayerColor
+}
+
+export interface PublicPlayer {
   username: string
   color: PlayerColor
 }
@@ -71,8 +77,10 @@ export default function Home() {
     socket.emit('createLobby', getUuid())
   }
 
-  const joinLobby = (lobbyId: string) => {
-    socket.emit('joinLobby', lobbyId, getUuid())
+  const joinLobby = (lobbyId: string, color: PlayerColor) => {
+    if (!isPlayerInALobby() && lobbies.filter(l => l.id == lobbyId)[0]?.players?.length < 4) {
+      socket.emit('joinLobby', lobbyId, color, getUuid())
+    }
   }
 
   const leaveLobby = (lobbyId: string) => {
@@ -84,8 +92,8 @@ export default function Home() {
     socket.emit('updateUsername', input.value, getUuid(), lobbyId)
   }
 
-  const handleChangePlayerColor = (lobbyId: string) => {
-    socket.emit('changePlayerColor', lobbyId, getUuid())
+  const handleChangePlayerColor = (lobbyId: string, color?: PlayerColor) => {
+    socket.emit('changePlayerColor', lobbyId, color, getUuid())
   }
 
   const isPlayerInALobby = (lobbyId?: string) => {
@@ -98,17 +106,7 @@ export default function Home() {
   }
 
   const startSingleplayerGame = () => {
-    const params = ['r', 'g', 'y', 'b']
-    const colors = activeColors().map(c => {
-      const checkbox = document.getElementById(c) as HTMLInputElement
-      return checkbox?.checked
-    })
-
-    if (!colors.find(c => c) || !colors.filter(c => c == false).length) {
-      router.push('/play')
-      return
-    }
-    router.push(`/play?${colors.map((c, i) => c ? `${params[i]}=1&` : '').join('')}`)
+    router.push('/play')
   }
 
   const startMultiplayerGame = (lobbyId: string) => {
@@ -117,38 +115,65 @@ export default function Home() {
   
   return (
     <PageFrame>
-      <div className={styles.container}>
-        <div>
-          {activeColors().map(c => <div key={c}>
-            <input type="checkbox" id={c} name={c} defaultChecked/>
-            <label htmlFor={c}>{c}</label>
-          </div>)}
-          <button onClick={startSingleplayerGame}>Start Game</button>
+      <div className={`${styles.container} background`}>
+        <div className={styles.backgroundImage}>
+          <Image 
+            src={lobbyBackground_image} 
+            alt='malefiz background image' 
+            layout='fill'
+            objectFit='contain'
+          />
         </div>
-        <div className={styles.container_l2}>
-          <div className={styles.container_l3}>
-            <Typography variant="h4">
-              Lobbies
-            </Typography>
-            {lobbies.map(l => <LobbyComp 
-              key={l.id}
-              lobby={l}
-              handleChangePlayerColor={handleChangePlayerColor}
-              handleUsernameChange={handleUsernameChange}
-              joinLobby={joinLobby}
-              leaveLobby={leaveLobby}
-              startMultiplayerGame={startMultiplayerGame}
-              isPlayerInALobby={isPlayerInALobby}
-            />)}
-          {!isPlayerInALobby() && <button onClick={createLobby}>Create Lobby</button>}
+        <div className={styles.container_l1}>
+          <div className={styles.titleImageContainer}>
+            <div className={styles.titleImage}>
+              <Image src={title_image} alt='Title' fill style={{ objectFit: "contain" }}/>
+            </div>
           </div>
-          <div className={styles.container_l3}>
-            <Typography variant="h4">
-              Games
-            </Typography>
-            {games?.map((g, i) => <div key={g.lobbyId}>
-              <span onClick={() => router.push(`/play?lid=${g.lobbyId}`)}>Game {i + 1}</span>
-            </div>)}
+          <div className={styles.container_l2}>
+            <button
+              className={`button primaryAlert large marginBottom`}
+              onClick={startSingleplayerGame} 
+            >
+              Quick Game
+            </button>
+            {!lobbies.length && <button 
+              className={`button secondary large marginBottom`}
+              onClick={createLobby}
+            >
+              Create Lobby
+            </button>}
+            {lobbies.length > 0 && <h2 className={`text_h2 ${styles.outline}`}>LOBBIES</h2>}
+            <div className={styles.container_l3}>
+              <div className={styles.container_l4}>
+                {lobbies.map(l => <LobbyComp 
+                  key={l.id}
+                  lobby={l}
+                  handleChangePlayerColor={handleChangePlayerColor}
+                  handleUsernameChange={handleUsernameChange}
+                  joinLobby={joinLobby}
+                  leaveLobby={leaveLobby}
+                  startMultiplayerGame={startMultiplayerGame}
+                  isPlayerInALobby={isPlayerInALobby}
+                />)}
+              </div>
+              {(!isPlayerInALobby() && lobbies.length > 0) && <div className={styles.bottomContainer}><button 
+                className={`button secondary marginBottom`}
+                onClick={createLobby}
+              >
+                Create Lobby
+              </button></div>}
+            </div>
+            {/* <Paper>
+              <div className={styles.container_l3}>
+                <Typography variant="h4">
+                  Games
+                </Typography>
+                {games?.map((g, i) => <div key={g.lobbyId}>
+                  <span onClick={() => router.push(`/play?lid=${g.lobbyId}`)}>Game {i + 1}</span>
+                </div>)}
+              </div>
+            </Paper> */}
           </div>
         </div>
       </div>

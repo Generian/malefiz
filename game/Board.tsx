@@ -25,7 +25,7 @@ export const Board = ({
   const fieldsToHighlight = paths && paths.map(p => p[p.length - 1])
   return (
     <div
-      className={styles.container}
+      className={`${styles.container} background`}
       style={{ minWidth: 17 * SPACING + POSITION_SIZE, minHeight: 17 * SPACING + POSITION_SIZE}}
     >
       <Decoration />

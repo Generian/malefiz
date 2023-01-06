@@ -1,43 +1,116 @@
 .container {
-  display: inline-block;
+  width: 100%;
+  box-sizing: border-box;
   padding: 1rem;
   width: 100%;
+  background-color: var(--gray1);
+  border-radius: 0.5rem;
+  position: relative;
+  margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+  flex-direction: column;
 }
 
-.playerContainer {
+.player {
+  width: 100%;
+  height: 2rem;
+  border: 1px dashed var(--gray3);
   display: flex;
   flex-direction: row;
-  padding: 0.5rem;
   align-items: center;
+  padding-left: 1rem;
+  box-sizing: border-box;
+  margin-bottom: 0.5rem;
+}
+
+.clickable {
+  cursor: pointer;
+}
+
+.clickable:hover {
+  border-style: solid;
 }
 
 .color {
   width: 1.4rem;
   height: 1.4rem;
   border-radius: 0.7rem;
-  box-shadow: rgba(0, 0, 0, 0.4) 0px 2px 4px, rgba(0, 0, 0, 0.3) 0px 7px 13px -3px, rgba(0, 0, 0, 0.2) 0px -3px 0px inset;
+  box-sizing: border-box;
+  border: 0.25rem solid transparent;
 }
 
-.userName {
-  padding-left: 0.5rem;
+.active {
+  box-shadow: rgba(0, 0, 0, 0.4) 0px 2px 4px, rgba(0, 0, 0, 0.3) 0px 7px 13px -3px, rgba(0, 0, 0, 0.2) 0px -3px 0px inset;
+  border: none;
+}
+
+.inactive {
+  background-color: transparent!important;
+}
+
+.RED {
+  background-color: var(--red);
+  border-color: var(--red);
+}
+
+.GREEN {
+  background-color: var(--green);
+  border-color: var(--green);
+}
+
+.YELLOW {
+  background-color: var(--yellow);
+  border-color: var(--yellow);
+}
+
+.BLUE {
+  background-color: var(--blue);
+  border-color: var(--blue);
 }
 
 .highlightPlayerName {
   font-weight: bold;
 }
 
-.RED {
-  background-color: var(--red);
+.placeholderColor {
+  width: 1.4rem;
+  height: 1.4rem;
+  border-radius: 0.7rem;
+  background-color: var(--gray3);
 }
 
-.GREEN {
-  background-color: var(--green);
+.placeholderText {
+  margin-left: 1rem;
+  color: var(--gray3);
 }
 
-.YELLOW {
-  background-color: var(--yellow);
+.userName {
+  border: 0px solid transparent!important;
 }
 
-.BLUE {
-  background-color: var(--blue);
+.usernameInput {
+  border: none;
+  width: 50%;
+}
+
+.usernameContainer {
+  margin-left: 1rem;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  flex: 1;
+}
+
+.lobbyTitle {
+  font-size: 0.75rem;
+  color: var(--gray3);
+}
+
+.lobbyId {
+  font-size: 1.25rem;
+  font-weight: bold;
+  color: var(--coverBorder);
+  margin-bottom: 0.75rem;
 }

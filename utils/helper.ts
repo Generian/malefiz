@@ -1,3 +1,6 @@
+import { PlayerColor } from "src/game/resources/playerColors";
+import { PublicPlayer } from "src/pages";
+
 export const onlyUnique = (value: any, index: any, self: string | any[]) => {
   return self.indexOf(value) === index;
 }
@@ -29,3 +32,9 @@ export const createLobbyId = () => {
 }
 
 export const getUuid = () => getCookie('uuid') as string
+
+export const getActivePlayer = (players: PublicPlayer[], activePlayerColor: PlayerColor) => {
+  if (!players || !activePlayerColor) return
+  console.log(players, activePlayerColor)
+  return players?.find(p => p.color == activePlayerColor)
+}

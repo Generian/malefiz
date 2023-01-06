@@ -64,8 +64,8 @@ const SocketHandler = (_: NextApiRequest, res: NextApiResponseWithSocket) => {
     const getLobbyById = (lobbyId: string) => lobbies.filter(l => l.id == lobbyId)[0]
 
     const updateLobbyInLobbies = (newLobby: Lobby) => {
-      const otherLobbies = lobbies.filter(l => l.id != newLobby.id)
-      lobbies = [...otherLobbies, newLobby]
+      const index = lobbies.indexOf(lobbies.filter(l => l.id == newLobby.id)[0])
+      lobbies.splice(index, 1, newLobby)
       return
     }
 
@@ -152,15 +152,15 @@ const SocketHandler = (_: NextApiRequest, res: NextApiResponseWithSocket) => {
         io.emit('updateLobbies', lobbies)
       })
 
-      socket.on('joinLobby', (lobbyId: string, uuid: string) => {
+      socket.on('joinLobby', (lobbyId: string, color: PlayerColor, uuid: string) => {
         let newLobby = getLobbyById(lobbyId)
 
-        if (newLobby.players.length < 4) {
+        if (newLobby.players.length < 4 && getFreeColors(lobbyId).includes(color)) {
           // Add player
           newLobby.players = [...newLobby.players, {
             uuid: uuid,
             username: getNewLobbyUsername(uuid, lobbyId),
-            color: getFreeColors(lobbyId)[0]
+            color: color
           }]
 
           // Update lobbies
@@ -206,11 +206,11 @@ const SocketHandler = (_: NextApiRequest, res: NextApiResponseWithSocket) => {
         }
       })
 
-      socket.on('changePlayerColor', (lobbyId: string, uuid: string) => {
+      socket.on('changePlayerColor', (lobbyId: string, color: PlayerColor | undefined, uuid: string) => {
         const newLobby = getLobbyById(lobbyId)
         const newPlayer = newLobby?.players?.filter(p => p.uuid == uuid)[0]
         const freeColors = getFreeColors(lobbyId)
-        const nextColor = nextPlayerColor(newPlayer.color, [...freeColors, newPlayer.color])
+        const nextColor = (color && freeColors.includes(color)) ? color : nextPlayerColor(newPlayer.color, [...freeColors, newPlayer.color])
 
         newLobby.players.splice(newLobby.players.indexOf(newPlayer), 1, {
           ...newPlayer,
@@ -243,8 +243,14 @@ const SocketHandler = (_: NextApiRequest, res: NextApiResponseWithSocket) => {
       socket.on('getGameValidityAndColors', (lobbyId: string, uuid: string) => {
         const game = games[lobbyId]
         const playerColor = game?.players?.filter(p => p.uuid == uuid)[0]?.color
+        const players = game?.players?.map(p => {
+          return {
+            username: p.username,
+            color: p.color
+          }
+        })
 
-        socket.emit('getGameValidityAndColors', !!game, playerColor, game?.activePlayerColor, game?.players?.map(p => p.color), game?.turn > 1)
+        socket.emit('getGameValidityAndColors', !!game, playerColor, game?.activePlayerColor, game?.turn > 1, players)
 
         // Find lobby player might be in and send game data
         if (game && game.data) {

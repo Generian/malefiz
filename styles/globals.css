@@ -14,5 +14,71 @@ body {
   --blockMarkerColor: hwb(40 7% 19%);
   --highlightColor: lightgrey;
   --background: #fcc534;
+  --coverBorder: #cd4825;
   --lines: #836831;
+  --gray1: #f0eae3;
+  --gray2: #e2d7cb;
+  --gray3: #dac8b4;
+  --black: #362410;
+}
+
+.background {
+  background-color: #fcc534;
+  background-image: url("../public/egg-shell.png");
+}
+
+/* Buttons */
+
+.button {
+  font-family: 'Arbutus', sans-serif;
+  letter-spacing: 0.1rem;
+  width: 100%;
+  padding: 0.8rem;
+  cursor: pointer;
+  border-radius: 0.5rem;
+  border-width: 2px;
+}
+
+.button:disabled {
+  background-color: var(--gray1);
+  color: var(--gray3);
+  border-color: var(--gray1);
+  box-shadow: none;
+}
+
+.primary {
+  background-color: var(--background);
+  color: var(--black);
+  border-color: var(--background);
+}
+
+.primaryAlert {
+  background-color: var(--coverBorder);
+  color: var(--gray1);
+  border-color: var(--coverBorder);
+  box-shadow: rgba(50, 50, 93, 0.25) 0px 3px 6px -2px, rgba(0, 0, 0, 0.3) 0px 3px 7px -3px;
+}
+
+.secondary {
+  background-color: var(--gray1);
+  color: var(--black);
+  border-color: var(--gray1);
+}
+
+.large {
+  font-size: 1.5rem;
+  border-width: 3px;
+}
+
+.marginBottom {
+  margin-bottom: 1rem;
+}
+
+/* Typography */
+
+.text_h2 {
+  margin: 1rem;
+  color: var(--black);
+  font-family: 'Arbutus', sans-serif;
+  letter-spacing: 0.1rem;
 }

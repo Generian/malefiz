@@ -8,8 +8,9 @@ import { getAvailableMovePaths } from './resources/routing'
 import { io, Socket } from 'socket.io-client'
 import { ClientToServerEvents, ServerToClientEvents } from 'src/utils/socketHelpers'
 import { GameStates, Piece } from './resources/gameTypes'
-import { getUuid } from 'src/utils/helper'
+import { getActivePlayer, getUuid } from 'src/utils/helper'
 import { useRouter } from 'next/router'
+import { PublicPlayer } from 'src/pages'
 
 export const debugMode = false
 
@@ -20,7 +21,7 @@ export const Game = () => {
   const { lid, r, g, y, b } = router.query
 
   const [gameState, setGamestate] = useState<GameStates>('ROLL_DICE')
-  const [playerColors, setPlayerColors] = useState<PlayerColor[]>()
+  const [players, setPlayers] = useState<PublicPlayer[]>()
   const [activePlayerColor, setActivePlayerColor] = useState<PlayerColor>()
   const [diceValue, setDiceValue] = useState<number | undefined>()
   const [blocks, setBlocks] = useState<number[]>(defaultBlocks)
@@ -37,9 +38,9 @@ export const Game = () => {
       const colorsFromParams = activeColors(!!r, !!g, !!y, !!b)
       const colorsToInitialiseGame = colorsFromParams.length ? colorsFromParams : activeColors(true, true, true, true)
   
-      setPlayerColors(colorsToInitialiseGame)
-      setActivePlayerColor(colorsToInitialiseGame[0])
-      setPieces(initialisePieces(colorsToInitialiseGame))
+      setPlayers(colorsToInitialiseGame)
+      setActivePlayerColor(colorsToInitialiseGame[0].color)
+      setPieces(initialisePieces(colorsToInitialiseGame.map(c => c.color)))
     }
   }, [router.query])
 
@@ -76,17 +77,17 @@ export const Game = () => {
       }
     })
 
-    socket.on('getGameValidityAndColors', (lobbyValid, playerColor, activePlayerColor, allPlayerColors, isInPlay) => {
-      console.log("received validity data")
+    socket.on('getGameValidityAndColors', (lobbyValid, playerColor, activePlayerColor, isInPlay, allPlayers) => {
+      console.log("received validity data", allPlayers)
       if (!lobbyValid) {
         console.error("Game lobby ID is not valid.", playerColor)
         router.push('/')
       } else {
         playerColor && setMyColor(playerColor)
-        setPlayerColors(allPlayerColors)
+        setPlayers(allPlayers)
         if (!isInPlay) {
           setActivePlayerColor(activePlayerColor)
-          setPieces(initialisePieces(allPlayerColors))
+          setPieces(initialisePieces(allPlayers.map(p => p.color)))
         }
       }
     })
@@ -150,7 +151,7 @@ export const Game = () => {
   }
 
   const moveActivePiece = (posId: number) => {
-    if (!activePlayerColor || !pieces || !playerColors) return
+    if (!activePlayerColor || !pieces || !players) return
     const moveOptions = !!diceValue && !!activePiece && getAvailableMovePaths(activePiece.pos, activePlayerColor, diceValue, blocks, pieces).map(p => p[p.length - 1])
     debugMode && console.log("Available paths:", moveOptions)
     if (!!moveOptions && moveOptions.includes(posId)) {
@@ -172,7 +173,7 @@ export const Game = () => {
       }
   
       if (diceValue != 6 && !blocks.includes(posId)) {
-        newActivePlayerColor = nextPlayerColor(activePlayerColor, playerColors)
+        newActivePlayerColor = nextPlayerColor(activePlayerColor, players.map(p => p.color))
         newDiceValue = undefined
       }
       
@@ -197,7 +198,7 @@ export const Game = () => {
   }
 
   const moveBlock = (posId: number) => {
-    if (!activePlayerColor || !pieces || !playerColors) return
+    if (!activePlayerColor || !pieces || !players) return
     const moveOptions = positions
       .filter(p => p.y > 1) // Filter out first rows
       .map(p => p.id)
@@ -207,7 +208,7 @@ export const Game = () => {
     if (moveOptions.includes(posId)) {
       let newActivePlayerColor: PlayerColor = activePlayerColor
       if (diceValue != 6) {
-        newActivePlayerColor = nextPlayerColor(activePlayerColor, playerColors)
+        newActivePlayerColor = nextPlayerColor(activePlayerColor, players.map(p => p.color))
       }
 
       let newBlocks: number[] = [...blocks, posId]
@@ -242,7 +243,7 @@ export const Game = () => {
 
   return (
     <div className={styles.container}>
-      {(activePlayerColor && pieces && playerColors) && <>
+      {(activePlayerColor && pieces && players) && <>
         <Board 
           pieces={pieces}
           paths={!!diceValue && !!activePiece && gameState == 'MOVE_PIECE' && getAvailableMovePaths(activePiece.pos, activePlayerColor, diceValue, blocks, pieces)}
@@ -256,7 +257,7 @@ export const Game = () => {
           </div>}
           {myColor && <div className={styles.default}><span>Your color: </span><span className={`${styles[myColor]} ${styles.bold}`}>{myColor}</span></div>}
           <div className={styles.default}>
-            <span className={`${styles[activePlayerColor]} ${styles.bold}`}>{activePlayerColor}</span>{(gameState == 'MOVE_PIECE' || gameState == 'SELECT_PIECE') ? ` rolled ${diceValue} and` : ''}<span> should </span><span className={styles.bold}>{gameState}</span><span>.</span>
+            <span className={`${styles[activePlayerColor]} ${styles.bold}`}>{getActivePlayer(players, activePlayerColor)?.username}</span>{(gameState == 'MOVE_PIECE' || gameState == 'SELECT_PIECE') ? ` rolled ${diceValue} and` : ''}<span> should </span><span className={styles.bold}>{gameState}</span><span>.</span>
           </div>
           {myTurn() && <DiceRoller setDiceValue={playerRolledDice}/>}
           {debugMode && <button onClick={() => console.log("pieces:", pieces)}>Print pieces</button>}
