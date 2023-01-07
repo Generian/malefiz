@@ -1,6 +1,5 @@
 import { positions } from "./resources/positions"
 import styles from 'styles/ConnectingLines.module.css'
-import { POSITION_SIZE, SPACING } from "./resources/styles"
 import { useEffect, useState } from "react"
 import { getPosition } from "./Position"
 
@@ -48,7 +47,7 @@ export const ConnectingLines = ({ spacing, positionSize }: ConnectingLineProps) 
     >
       {connections && connections.map((c, i) => {
         const coords = getPosition(c.x, c.y, spacing, positionSize, 'BORDER', c.h)
-              
+
         return <div 
           key={i} 
           className={styles.connection} 

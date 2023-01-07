@@ -8,7 +8,6 @@ import red_player from '../public/red_player.png'
 import green_player from '../public/green_player.png'
 import yellow_player from '../public/yellow_player.png'
 import blue_player from '../public/blue_player.png'
-import { POSITION_SIZE, SPACING } from './resources/styles'
 import { ConnectingLines } from './ConnectingLines'
 import { getPosition } from './Position'
 
@@ -70,15 +69,15 @@ const decor: Decor[] = [
   {
     image: red_player,
     alt: 'red_player',
-    x: 2.5,
-    y: 0,
-    width: 2,
+    x: 2.45,
+    y: -0.15,
+    width: 1.95,
     type: 'POSITION'
   },
   {
     image: green_player,
     alt: 'green_player',
-    x: 6.5,
+    x: 6.45,
     y: -0.5,
     width: 1.8,
     type: 'POSITION'
@@ -86,7 +85,7 @@ const decor: Decor[] = [
   {
     image: yellow_player,
     alt: 'yellow_player',
-    x: 10.8,
+    x: 10.7,
     y: -0.5,
     width: 1.4,
     type: 'POSITION'
@@ -94,7 +93,7 @@ const decor: Decor[] = [
   {
     image: blue_player,
     alt: 'blue_player',
-    x: 14.8,
+    x: 14.7,
     y: -0.5,
     width: 1.4,
     type: 'POSITION'
@@ -113,7 +112,6 @@ export const Decoration = ({ spacing, positionSize }: DecorationProps) => {
       {decor.map(d => {
         const coords = getPosition(d.x, d.y, spacing, positionSize, d.type)
 
-        console.log("test", coords)
         return <Image 
           src={d.image} 
           alt={d.alt} 

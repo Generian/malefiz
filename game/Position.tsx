@@ -2,7 +2,7 @@ import styles from 'styles/Position.module.css'
 import { BlockMarker } from './BlockMarker'
 import { debugMode } from './Game'
 import { Pos, positions } from './resources/positions'
-import { BORDER, POSITION_SIZE, REM, SPACING } from './resources/styles'
+import { BORDER, REM } from './resources/styles'
 
 interface PositionProps {
   id: number,

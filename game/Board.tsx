@@ -30,15 +30,12 @@ export const Board = ({
   const spacing = boardSize / (maxPosDimension + 1)
   const positionSize = spacing * 0.8
   const pieceSize = positionSize * 0.85
-
-  console.log(boardSize, maxPosDimension, spacing)
   
   const fieldsToHighlight = paths && paths.map(p => p[p.length - 1])
   return (
     <div
       className={`${styles.container} background`}
       style={{ minWidth: boardSize, minHeight: boardSize }}
-      // style={{ minWidth: 17 * SPACING + POSITION_SIZE, minHeight: 17 * SPACING + POSITION_SIZE}}
     >
       <Decoration 
         spacing={spacing}
