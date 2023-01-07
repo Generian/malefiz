@@ -1,0 +1,21 @@
+.container {
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  justify-content: flex-start;
+}
+
+.square {
+  box-sizing: border-box;
+  overflow: scroll;
+}
+
+.instructions {
+  flex: 1;
+}
+
+.fixedInstructionsContainer {
+  position: fixed;
+  overflow: scroll;
+  box-sizing: border-box;
+}

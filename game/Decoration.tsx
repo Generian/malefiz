@@ -1,4 +1,4 @@
-import Image from 'next/image'
+import Image, { StaticImageData } from 'next/image'
 import gun from '../public/gun.png'
 import gun_reverse from '../public/gun_reverse.png'
 import tree from '../public/tree.png'
@@ -10,22 +10,120 @@ import yellow_player from '../public/yellow_player.png'
 import blue_player from '../public/blue_player.png'
 import { POSITION_SIZE, SPACING } from './resources/styles'
 import { ConnectingLines } from './ConnectingLines'
+import { getPosition } from './Position'
 
-export const Decoration = () => {
+interface DecorationProps {
+  spacing: number
+  positionSize: number
+}
+
+interface Decor {
+  image: StaticImageData,
+  alt: string
+  x: number,
+  y: number,
+  width: number
+  type: 'POSITION' | 'BORDER' | 'CENTER'
+}
+
+const decor: Decor[] = [
+  {
+    image: gun,
+    alt: 'gun',
+    x: 1,
+    y: 14,
+    width: 1.3,
+    type: 'POSITION'
+  },
+  {
+    image: gun_reverse,
+    alt: 'gun',
+    x: 16.3,
+    y: 14,
+    width: 1.3,
+    type: 'POSITION'
+  },
+  {
+    image: finish,
+    alt: 'finish',
+    x: 8.22,
+    y: 14.2,
+    width: 2.3,
+    type: 'POSITION'
+  },
+  {
+    image: tree,
+    alt: 'tree',
+    x: 2,
+    y: 9,
+    width: 3,
+    type: 'POSITION'
+  },
+  {
+    image: house,
+    alt: 'house',
+    x: 13,
+    y: 9.5,
+    width: 3,
+    type: 'POSITION'
+  },
+  {
+    image: red_player,
+    alt: 'red_player',
+    x: 2.5,
+    y: 0,
+    width: 2,
+    type: 'POSITION'
+  },
+  {
+    image: green_player,
+    alt: 'green_player',
+    x: 6.5,
+    y: -0.5,
+    width: 1.8,
+    type: 'POSITION'
+  },
+  {
+    image: yellow_player,
+    alt: 'yellow_player',
+    x: 10.8,
+    y: -0.5,
+    width: 1.4,
+    type: 'POSITION'
+  },
+  {
+    image: blue_player,
+    alt: 'blue_player',
+    x: 14.8,
+    y: -0.5,
+    width: 1.4,
+    type: 'POSITION'
+  }
+]
+
+export const Decoration = ({ spacing, positionSize }: DecorationProps) => {
   return (
     <div 
       style={{ display: 'relative' }}
     >
-      <ConnectingLines />
-      <Image src={gun} alt={'gun'} width={70} style={{ position: 'absolute', top: SPACING/2, left: SPACING/1.7}}/>
-      <Image src={gun_reverse} alt={'gun'} width={70} style={{ position: 'absolute', top: SPACING/2, left: 17 * SPACING + POSITION_SIZE - SPACING/1.7 - 70}}/>
-      <Image src={finish} alt={'finish'} width={140} style={{ position: 'absolute', top: SPACING/8, left: (17 * SPACING + POSITION_SIZE)/2 - 70}}/>
-      <Image src={tree} alt={'trees'} width={170} style={{ position: 'absolute', top: 5.2 * SPACING, left: 2 * SPACING}}/>
-      <Image src={house} alt={'trees'} width={170} style={{ position: 'absolute', top: 5 * SPACING, left: 12.5 * SPACING}}/>
-      <Image src={red_player} alt={'red_player'} width={SPACING * 9 / 5} style={{ position: 'absolute', top: 14.8 * SPACING, left: 2 * SPACING}}/>
-      <Image src={green_player} alt={'green_player'} width={SPACING * 8.5 / 5} style={{ position: 'absolute', top: 15.2 * SPACING, left: 6.05 * SPACING}}/>
-      <Image src={yellow_player} alt={'yellow_player'} width={SPACING * 6.5 / 5} style={{ position: 'absolute', top: 15.1 * SPACING, left: 10.28 * SPACING}}/>
-      <Image src={blue_player} alt={'blue_player'} width={SPACING * 6.1 / 5} style={{ position: 'absolute', top: 15.2 * SPACING, left: 14.3 * SPACING}}/>
+      <ConnectingLines 
+        spacing={spacing}
+        positionSize={positionSize}
+      />
+      {decor.map(d => {
+        const coords = getPosition(d.x, d.y, spacing, positionSize, d.type)
+
+        console.log("test", coords)
+        return <Image 
+          src={d.image} 
+          alt={d.alt} 
+          width={d.width * spacing} 
+          style={{ 
+            position: 'absolute', 
+            top: coords.y, 
+            left: coords.x
+          }}/>
+      })}
     </div>
   )
 }

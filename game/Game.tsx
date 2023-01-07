@@ -11,6 +11,8 @@ import { GameStates, Piece } from './resources/gameTypes'
 import { getActivePlayer, getUuid } from 'src/utils/helper'
 import { useRouter } from 'next/router'
 import { PublicPlayer } from 'src/pages'
+import { Layout } from 'src/components/Layout'
+import { boxSizing } from '@mui/system'
 
 export const debugMode = false
 
@@ -244,14 +246,19 @@ export const Game = () => {
   return (
     <div className={styles.container}>
       {(activePlayerColor && pieces && players) && <>
-        <Board 
-          pieces={pieces}
-          paths={!!diceValue && !!activePiece && gameState == 'MOVE_PIECE' && getAvailableMovePaths(activePiece.pos, activePlayerColor, diceValue, blocks, pieces)}
-          handleClick={handleClick}
-          handlePieceClick={playerSelectedPiece}
-          blocks={blocks}
-        />
-        <div className={styles.infoContainer}>
+        <Layout 
+          board={
+            // <div style={{width: 1000, height: 1000, border: '5px solid red', boxSizing: "border-box", margin: '1rem'}}></div>
+          
+            <Board 
+              pieces={pieces}
+              paths={!!diceValue && !!activePiece && gameState == 'MOVE_PIECE' && getAvailableMovePaths(activePiece.pos, activePlayerColor, diceValue, blocks, pieces)}
+              handleClick={handleClick}
+              handlePieceClick={playerSelectedPiece}
+              blocks={blocks}
+            />
+          }
+          instructions={<div className={styles.infoContainer}>
           {gameState == 'END' && <div className={styles.default}>
             <span>Winner: {pieces.filter(p => p.pos == winningPosId)[0].color}</span>
           </div>}
@@ -261,7 +268,8 @@ export const Game = () => {
           </div>
           {myTurn() && <DiceRoller setDiceValue={playerRolledDice}/>}
           {debugMode && <button onClick={() => console.log("pieces:", pieces)}>Print pieces</button>}
-        </div>
+        </div>}
+        />
       </>}
     </div>
   )

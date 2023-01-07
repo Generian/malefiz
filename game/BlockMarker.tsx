@@ -1,11 +1,11 @@
 import styles from 'styles/BlockMarker.module.css'
 import { PIECE_SIZE } from './resources/styles'
 
-export const BlockMarker = () => {
+export const BlockMarker = ({ pieceSize }: { pieceSize: number }) => {
   return (
     <div 
       className={styles.default}
-      style={{ width: PIECE_SIZE, height:PIECE_SIZE, borderRadius: PIECE_SIZE/2 }}
+      style={{ width: pieceSize, height:pieceSize, borderRadius: pieceSize/2 }}
     >
     </div>
   )

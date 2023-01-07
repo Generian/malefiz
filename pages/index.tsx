@@ -106,6 +106,7 @@ export default function Home() {
   }
 
   const startSingleplayerGame = () => {
+    lobbies.filter(l => l.players.map(p => p.uuid).includes(getUuid())).forEach(l => leaveLobby(l.id))
     router.push('/play')
   }
 

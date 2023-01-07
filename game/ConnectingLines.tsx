@@ -2,8 +2,8 @@ import { positions } from "./resources/positions"
 import styles from 'styles/ConnectingLines.module.css'
 import { POSITION_SIZE, SPACING } from "./resources/styles"
 import { useEffect, useState } from "react"
+import { getPosition } from "./Position"
 
-const BORDER = 3
 
 const getConnectionDetails = (c: [number, number]) => {
   const start = positions.filter(p => p.id == c[0])[0]
@@ -25,7 +25,12 @@ const getConnections = () => {
 }).map(c => getConnectionDetails(c as [number, number])).filter(c => c.y >= 0)
 }
 
-export const ConnectingLines = () => {
+interface ConnectingLineProps {
+  spacing: number
+  positionSize: number
+}
+
+export const ConnectingLines = ({ spacing, positionSize }: ConnectingLineProps) => {
   const [connections, setConnections] = useState<{
     x: number;
     y: number;
@@ -41,7 +46,19 @@ export const ConnectingLines = () => {
     <div 
       style={{ display: 'relative' }}
     >
-      {connections && connections.map((c, i) => <div key={i} className={styles.connection} style={{ left: (c.x - 1) * SPACING + SPACING/2 + POSITION_SIZE/2 - BORDER, top: 18 * SPACING - (c.y + 4) * SPACING + SPACING/2 + POSITION_SIZE/2 - SPACING * c.h - BORDER, width: c.w * SPACING, height: c.h * SPACING}}></div>)}
+      {connections && connections.map((c, i) => {
+        const coords = getPosition(c.x, c.y, spacing, positionSize, 'BORDER', c.h)
+              
+        return <div 
+          key={i} 
+          className={styles.connection} 
+          style={{ 
+            left: coords.x, 
+            top: coords.y, 
+            width: c.w * spacing, 
+            height: c.h * spacing
+          }}
+        ></div>})}
     </div>
   )
 }
