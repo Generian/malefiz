@@ -59,7 +59,7 @@ export const Layout = ({ board, instructions }: { board: ReactNode, instructions
   }
 
   return (
-    <PageFrame landscapeMode={false}>
+    <PageFrame noZoom={true}>
       <div className={styles.container} style={{ flexDirection: (windowSize.width > windowSize.height) ? 'row' : 'column'}}>
         <div 
           className={styles.square}
