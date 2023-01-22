@@ -1,3 +1,74 @@
 .container {
-  padding: 2rem;
+  position: fixed;
+  top: 0;
+  right: 0;
+  padding: 3rem;
+}
+
+.diceHider {
+  position: fixed;
+  top: 0;
+  right: 0;
+  width: 84px;
+  height: 84px;
+  margin: calc(3rem - 2px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: white;
+  opacity: 0;
+  transition: opacity 0.15s ease-in;
+  pointer-events: none;
+}
+
+.hide {
+  opacity: 0.85;
+  pointer-events: all;
+}
+
+.countdown {
+  font-weight: bold;
+  font-size: 1.5rem;
+  color: var(--black);
+  opacity: 1;
+  transition: color 1.5s ease-in, font-size 2s ease-in-out, opacity 2s ease-in;
+}
+
+.imminent {
+  color: var(--red);
+  font-size: 1.8rem;
+  opacity: 0.8;
+}
+
+.CTA {
+  position: absolute;
+  /* pointer-events: none; */
+  bottom: -50px;
+  width: 84px;
+  margin-right: calc(3rem - 2px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.CTA_text {
+  font-weight: bold;
+  text-align: center;
+}
+
+.bounce {
+  animation-name: bounce;
+  animation-duration: 1.5s;
+  animation-iteration-count: infinite;
+  transform-origin: bottom;
+  animation-timing-function: cubic-bezier(0.280, 0.840, 0.420, 1);
+}
+@keyframes bounce {
+  0%   { transform: scale(1,1)      translateY(0); }
+  10%  { transform: scale(1.1,.9)   translateY(0); }
+  30%  { transform: scale(.9,1.1)   translateY(-30px); }
+  50%  { transform: scale(1.05,.95) translateY(0); }
+  57%  { transform: scale(1,1)      translateY(-7px); }
+  64%  { transform: scale(1,1)      translateY(0); }
+  100% { transform: scale(1,1)      translateY(0); }
 }

@@ -1,0 +1,29 @@
+.container {
+  /* position: fixed;
+  right: 0;
+  top: calc(100vh - 150px); */
+  /* width: 400px; */
+  height: 150px;
+  width: 100%;
+  max-width: 100%;
+}
+
+/* Info */
+.infoContainer {
+  position: absolute;
+  right: -500px;
+  transition: all 0.5s ease-in-out;
+  opacity: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.phaseIn {
+  right: 1rem;
+}
+
+.phaseOut {
+  right: 1rem;
+  opacity: 0;
+}

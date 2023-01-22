@@ -4,10 +4,10 @@ import type { Server as HTTPServer } from 'http'
 import { Socket as NetSocket } from 'net'
 import type { Server as IOServer } from 'socket.io'
 import { v4 } from 'uuid'
-import { Lobby, Player } from '..'
+import { Lobby, Player, PublicPlayer } from '..'
 import { createLobbyId } from 'src/utils/helper'
 import { nextPlayerColor, PlayerColor } from 'src/game/resources/playerColors'
-import { GameStates, Piece } from 'src/game/resources/gameTypes'
+import { GameState, GameType, Piece } from 'src/game/resources/gameTypes'
 
 interface SocketServer extends HTTPServer {
   io?: IOServer | undefined
@@ -23,10 +23,11 @@ interface NextApiResponseWithSocket extends NextApiResponse {
 
 interface User {
   sockets: string[],
-  username?: string
+  globalUsername?: string,
+  online?: boolean
 }
 
-interface Players {
+interface Users {
   [key: string]: User
 }
 
@@ -36,16 +37,25 @@ export interface Game {
   activePlayerColor: PlayerColor
   turn: number
   data?: {
-    state: GameStates, 
+    state: GameState, 
     activePlayer: PlayerColor, 
     dice: number | undefined, 
     blockers: number[], 
     playerPieces: Piece[]
   }
+  gameType?: GameType
+  cooldown: number
 }
 
 interface Games {
   [key: string]: Game
+}
+
+export interface GameValidityData {
+  isLobbyValid: boolean
+  playerColor: PlayerColor | false
+  isGameInPlay: boolean
+  game: Game | false
 }
 
 const SocketHandler = (_: NextApiRequest, res: NextApiResponseWithSocket) => {
@@ -57,11 +67,15 @@ const SocketHandler = (_: NextApiRequest, res: NextApiResponseWithSocket) => {
     res.socket.server.io = io
 
     // Set variables
-    const players: Players = {}
+    const users: Users = {}
     let lobbies: Lobby[] = []
     const games: Games = {}
 
-    const getLobbyById = (lobbyId: string) => lobbies.filter(l => l.id == lobbyId)[0]
+    const getUuidBySocketId = (socketId: string) => {
+      return Object.keys(users).find(uuid => users[uuid].sockets.includes(socketId))
+    }
+
+    const getLobbyById = (lobbyId: string | undefined) => lobbies.find(l => l.id == lobbyId)
 
     const updateLobbyInLobbies = (newLobby: Lobby) => {
       const index = lobbies.indexOf(lobbies.filter(l => l.id == newLobby.id)[0])
@@ -70,12 +84,12 @@ const SocketHandler = (_: NextApiRequest, res: NextApiResponseWithSocket) => {
     }
 
     const getNewLobbyUsername = (uuid: string, lobbyId?: string) => {
-      let newLobbyUsername = players[uuid]?.username
+      let newLobbyUsername = users[uuid]?.globalUsername
       if (!newLobbyUsername) {
         newLobbyUsername = "Player 1"
         let i = 1
-        if (lobbyId) {
-          const lobby = getLobbyById(lobbyId)
+        const lobby = getLobbyById(lobbyId)
+        if (lobby) {
           while (lobby.players.map(p => p.username).includes(newLobbyUsername)) {
             i += 1
             newLobbyUsername = `Player ${i}`
@@ -87,8 +101,8 @@ const SocketHandler = (_: NextApiRequest, res: NextApiResponseWithSocket) => {
 
     const getFreeColors = (lobbyId?: string) => {
       let freeColors: PlayerColor[] = ['RED', 'GREEN', 'YELLOW', 'BLUE']
-      if (lobbyId) {
-        const lobby = getLobbyById(lobbyId)
+      const lobby = getLobbyById(lobbyId)
+      if (lobby) {
         lobby.players.forEach(p => {
           freeColors = freeColors.filter(c => c != p.color)
         })
@@ -96,71 +110,154 @@ const SocketHandler = (_: NextApiRequest, res: NextApiResponseWithSocket) => {
       return freeColors
     }
 
+    const getPublicPlayers = (lobbyId: string): PublicPlayer[] | undefined => {
+      const game = games[lobbyId]
+      if (!game) return
+      return game.players.map(p => {
+        return {
+          username: p.username,
+          color: p.color,
+          nextMoveTime: p.nextMoveTime,
+          gameState: p.gameState,
+          diceValue: p.diceValue,
+          online: users[p.uuid].online
+        }
+      })
+    }
+
+    const updateOnlineStatus = (uuid: string, isOnline: boolean) => {
+      // Update online status
+      users[uuid].online = isOnline
+
+      // Update lobbies
+      lobbies.forEach((l, lobbyIndex) => l.players.forEach((p, playerIndex) => {
+        if (p.uuid == uuid) {
+          lobbies[lobbyIndex].players[playerIndex].online = isOnline
+        }
+      }))
+
+      // Update games
+      Object.entries(games).forEach(entry => {
+        const [lobbyId, game] = entry
+        game.players.forEach((p, playerIndex) => {
+          if (p.uuid == uuid) {
+            games[lobbyId].players[playerIndex].online = isOnline
+          }
+        })
+      })
+    }
+
     // Logic starts here
     io.on('connection', socket => {
 
       // Set user uuid
-      socket.on('requestUuid', uuid => {
+      socket.on('requestUuid', (
+        lid: string | undefined, 
+        uuid: string | undefined, 
+        callback: (
+          newUuid: string, 
+          gameValidityData: GameValidityData
+        ) => void
+      ) => {
         let newUuid = uuid
-        if (uuid) {
-          const player = players[uuid]
-          if (player) {
-            if (player.sockets.includes(socket.id)) {
-              console.log("User with given uuid and socket id already known.")
-            } else {
-              players[uuid] = {
-                ...player,
-                sockets: [...player.sockets, socket.id]
+        if (newUuid && uuid) {
+          const user = users[uuid]
+          if (user) {
+            updateOnlineStatus(uuid, true)
+
+            // Store socketId
+            if (!user.sockets.includes(socket.id)) {
+              users[uuid] = {
+                ...user,
+                sockets: [...users[uuid].sockets, socket.id],
               }
             }
           } else {
-            players[uuid] = {
-              sockets: [socket.id]
+            users[uuid] = {
+              sockets: [socket.id],
+              online: true
             }
           }
         } else {
           newUuid = v4()
-          players[newUuid] = {
-            sockets: [socket.id]
+          users[newUuid] = {
+            sockets: [socket.id],
+            online: true
           }
         }
 
-        socket.emit('receiveUuid', newUuid)
+        // socket.emit('receiveUuid', newUuid)
 
-        // Initialise user with data
+        const game = !!lid && games[lid]
+        const playerColor = game && game.players?.filter(p => p.uuid == uuid)[0]?.color
+
+        const gameValidityData: GameValidityData = {
+          isLobbyValid: !!game,
+          playerColor: playerColor,
+          isGameInPlay: game && game?.turn > 1,
+          game: game          
+        }
+
+        // Update the client
+        callback(newUuid, gameValidityData)
+
+        // Update all users
         io.emit('updateLobbies', lobbies, Object.values(games))
 
         // Find lobby player might be in and send game data
-        const game = Object.values(games).find(g => g.players.map(p => p.uuid).includes(newUuid))
         if (game && game.data) {
-          socket.emit('receiveGameUpdate', game.lobbyId, game.data.state, game.data.activePlayer, game.data.dice, game.data.blockers, game.data.playerPieces)
+          io.emit('receiveGameUpdate', game, getPublicPlayers(game.lobbyId))
+        }
+
+        if (game) {
+          io.emit('playerUpdate', game.lobbyId, getPublicPlayers(game.lobbyId))
         }
       })
 
       // Lobbies handling
       socket.on('createLobby', uuid => {
-        if (!uuid) return
+        const player = users[uuid]
+        if (!player) return
 
         lobbies.push({
           id: createLobbyId(),
+          gameType: 'NORMAL',
+          cooldown: 5,
           players: [{
             uuid: uuid,
             username: getNewLobbyUsername(uuid),
-            color: getFreeColors()[0]
+            color: getFreeColors()[0],
+            online: player.online
           }]
         })
         io.emit('updateLobbies', lobbies)
       })
 
-      socket.on('joinLobby', (lobbyId: string, color: PlayerColor, uuid: string) => {
+      socket.on('changeLobbySettings', (uuid: string, lobbyId: string, gameType: GameType, cooldown: number) => {
         let newLobby = getLobbyById(lobbyId)
 
-        if (newLobby.players.length < 4 && getFreeColors(lobbyId).includes(color)) {
+        if (newLobby) {
+          newLobby.gameType = gameType
+          newLobby.cooldown = cooldown
+
+          // Update lobbies
+          updateLobbyInLobbies(newLobby)
+
+          io.emit('updateLobbies', lobbies)
+        }
+      })
+
+      socket.on('joinLobby', (lobbyId: string, color: PlayerColor, uuid: string) => {
+        let newLobby = getLobbyById(lobbyId)
+        const player = users[uuid]
+
+        if (newLobby && newLobby.players.length < 4 && getFreeColors(lobbyId).includes(color) && player) {
           // Add player
           newLobby.players = [...newLobby.players, {
             uuid: uuid,
             username: getNewLobbyUsername(uuid, lobbyId),
-            color: color
+            color: color,
+            online: player.online
           }]
 
           // Update lobbies
@@ -173,23 +270,25 @@ const SocketHandler = (_: NextApiRequest, res: NextApiResponseWithSocket) => {
       socket.on('leaveLobby', (lobbyId: string, uuid: string) => {
         let newLobby = getLobbyById(lobbyId)
 
-        // Remove player
-        newLobby.players = newLobby.players.filter(p => p.uuid != uuid)
+        if (newLobby) {
+          // Remove player
+          newLobby.players = newLobby.players.filter(p => p.uuid != uuid)
 
-        // Update lobbies
-        if (newLobby.players.length == 0) {
-          lobbies = lobbies.filter(l => l.id != newLobby.id)
-        } else {
-          updateLobbyInLobbies(newLobby)
+          // Update lobbies
+          if (newLobby.players.length == 0) {
+            lobbies = lobbies.filter(l => l.id != newLobby?.id)
+          } else {
+            updateLobbyInLobbies(newLobby)
+          }
+
+          io.emit('updateLobbies', lobbies)
         }
-
-        io.emit('updateLobbies', lobbies)
       })
 
       socket.on('updateUsername', (userName: string, uuid: string, lobbyId: string | undefined) => {
         if (!userName || !uuid) return
 
-        players[uuid].username = userName
+        users[uuid].globalUsername = userName
 
         let newLobby = !!lobbyId && getLobbyById(lobbyId)
 
@@ -208,30 +307,40 @@ const SocketHandler = (_: NextApiRequest, res: NextApiResponseWithSocket) => {
 
       socket.on('changePlayerColor', (lobbyId: string, color: PlayerColor | undefined, uuid: string) => {
         const newLobby = getLobbyById(lobbyId)
-        const newPlayer = newLobby?.players?.filter(p => p.uuid == uuid)[0]
-        const freeColors = getFreeColors(lobbyId)
-        const nextColor = (color && freeColors.includes(color)) ? color : nextPlayerColor(newPlayer.color, [...freeColors, newPlayer.color])
+        if (newLobby) {
+          const newPlayer = newLobby?.players?.filter(p => p.uuid == uuid)[0]
+          const freeColors = getFreeColors(lobbyId)
+          const nextColor = (color && freeColors.includes(color)) ? color : nextPlayerColor(newPlayer.color, [...freeColors, newPlayer.color])
 
-        newLobby.players.splice(newLobby.players.indexOf(newPlayer), 1, {
-          ...newPlayer,
-          color: nextColor
-        })
+          newLobby.players.splice(newLobby.players.indexOf(newPlayer), 1, {
+            ...newPlayer,
+            color: nextColor
+          })
 
-        // Update lobbies
-        updateLobbyInLobbies(newLobby)
+          // Update lobbies
+          updateLobbyInLobbies(newLobby)
 
-        io.emit('updateLobbies', lobbies)
+          io.emit('updateLobbies', lobbies)
+        }
       })
 
-      socket.on('startGame', (lobbyId: string, uuid: string) => {
+      socket.on('startGame', (lobbyId: string, uuid: string, gameType: GameType, cooldown: number) => {
         const lobby = getLobbyById(lobbyId)
 
-        if (!games[lobbyId]) {
+        if (!games[lobbyId] && lobby) {
           games[lobbyId] = {
             lobbyId: lobbyId,
-            players: lobby.players,
+            players: lobby.players.map(p => {
+              return {
+                ...p,
+                nextMoveTime: new Date().getTime(),
+                gameState: 'ROLL_DICE'
+              }
+            }),
             activePlayerColor: lobby.players.map(p => p.color)[0],
-            turn: 1
+            turn: 1,
+            gameType: gameType,
+            cooldown: cooldown
           }
           lobbies = lobbies.filter(l => l.id != lobby.id)
           io.emit('triggerGameStart', lobbyId, lobby.players.map(p => p.uuid))
@@ -243,35 +352,47 @@ const SocketHandler = (_: NextApiRequest, res: NextApiResponseWithSocket) => {
       socket.on('getGameValidityAndColors', (lobbyId: string, uuid: string) => {
         const game = games[lobbyId]
         const playerColor = game?.players?.filter(p => p.uuid == uuid)[0]?.color
-        const players = game?.players?.map(p => {
-          return {
-            username: p.username,
-            color: p.color
-          }
-        })
 
-        socket.emit('getGameValidityAndColors', !!game, playerColor, game?.activePlayerColor, game?.turn > 1, players)
+        socket.emit('getGameValidityAndColors', !!game, playerColor, game?.activePlayerColor, game?.turn > 1, getPublicPlayers(lobbyId), game?.gameType)
 
         // Find lobby player might be in and send game data
         if (game && game.data) {
-          socket.emit('receiveGameUpdate', game.lobbyId, game.data.state, game.data.activePlayer, game.data.dice, game.data.blockers, game.data.playerPieces)
+          socket.emit('receiveGameUpdate', 
+            game,
+            getPublicPlayers(game.lobbyId),
+          )
         }
       })
 
       socket.on('updateServerWithGameState', (
         lobbyId: string, 
         uuid: string,
-        state: GameStates, 
+        state: GameState, 
         activePlayer: PlayerColor, 
         dice: number | undefined, 
         blockers: number[], 
-        playerPieces: Piece[]
+        playerPieces: Piece[],
+        newPlayers: PublicPlayer[]
       ) => {
         const game = games[lobbyId]
         const player = game?.players?.find(p => p.uuid == uuid)
-        const itsPlayersTurn = player?.color == game?.activePlayerColor
+        const itsPlayersTurn = (player?.color == game?.activePlayerColor) || (game?.gameType == 'COMPETITION' && player?.nextMoveTime && player?.nextMoveTime <= new Date().getTime())
 
         if (game && player && itsPlayersTurn) {
+          if (game?.gameType == 'COMPETITION') {
+            games[lobbyId].players = game?.players?.map(p => {
+              const newPlayer = newPlayers.filter(p => p.color == player.color)[0]
+              if (p.color == player.color) {
+                return {
+                  ...newPlayer,
+                  uuid: p.uuid,
+                  nextMoveTime: (newPlayer.gameState == 'ROLL_DICE' && newPlayer.diceValue != 6) ? new Date().getTime() + 5 * 1000 : player.nextMoveTime,
+                }
+              } else {
+                return p
+              }
+            })
+          }
           games[lobbyId].activePlayerColor = activePlayer
           games[lobbyId].turn += 1
           game.data = {
@@ -281,7 +402,7 @@ const SocketHandler = (_: NextApiRequest, res: NextApiResponseWithSocket) => {
             blockers,
             playerPieces
           }
-          socket.broadcast.emit('receiveGameUpdate', lobbyId, state, activePlayer, dice, blockers, playerPieces)
+          socket.broadcast.emit('receiveGameUpdate', game, getPublicPlayers(lobbyId))
         } else {
           console.error("Error executing turn!", game, lobbyId, player, uuid, itsPlayersTurn)
         }
@@ -289,7 +410,25 @@ const SocketHandler = (_: NextApiRequest, res: NextApiResponseWithSocket) => {
 
       // Handle disconnect
       socket.on('disconnect', () => {
-        console.log('user disconnected')
+        const uuid = getUuidBySocketId(socket.id)
+        
+        if (uuid) {
+          updateOnlineStatus(uuid, false)
+
+          // Inform users
+          io.emit('updateLobbies', lobbies)
+
+          // Update games
+          Object.values(games).forEach(game => {
+            if (game.players.map(p => p.uuid).includes(uuid)) {
+              io.emit('playerUpdate', game.lobbyId, getPublicPlayers(game.lobbyId))
+            }
+          })
+
+          console.log('player disconnected:', users[uuid]?.globalUsername)
+        } else {
+          console.warn('user without uuid disconnected:', socket.id)
+        }
       })
     })
   }

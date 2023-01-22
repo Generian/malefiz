@@ -27,6 +27,24 @@ body {
   background-image: url("../public/egg-shell.png");
 }
 
+/* Colors */
+
+.RED {
+  color: var(--red);
+}
+
+.GREEN {
+  color: var(--green);
+}
+
+.YELLOW {
+  color: var(--yellow);
+}
+
+.BLUE {
+  color: var(--blue);
+}
+
 /* Buttons */
 
 .button {
@@ -70,6 +88,14 @@ body {
   border-width: 3px;
 }
 
+.small {
+  font-size: 0.7rem;
+  padding: 0.3rem;
+  padding-left: 0.7rem;
+  padding-right: 0.7rem;
+  border-width: 1px;
+}
+
 .marginBottom {
   margin-bottom: 1rem;
 }
@@ -81,4 +107,13 @@ body {
   color: var(--black);
   font-family: 'Arbutus', sans-serif;
   letter-spacing: 0.1rem;
+}
+
+.text_span_small {
+  color: var(--black);
+  font-size: 0.75rem;
+}
+
+.bold {
+  font-weight: bold;
 }

@@ -1,11 +1,12 @@
 import { IconButton, Paper } from "@mui/material"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { activeColors, PlayerColor } from "src/game/resources/playerColors"
 import { Lobby, Player } from "src/pages"
 import { getUuid } from "src/utils/helper"
 import styles from 'styles/Lobby.module.css'
 import React, { KeyboardEvent } from 'react'
 import CloseIcon from '@mui/icons-material/Close'
+import { GameType } from "src/game/resources/gameTypes"
 
 interface LobbyCompProps {
   lobby: Lobby
@@ -13,8 +14,9 @@ interface LobbyCompProps {
   handleUsernameChange: (lobbyId: string) => void
   joinLobby: (lobbyId: string, color: PlayerColor) => void
   leaveLobby: (lobbyId: string) => void
-  startMultiplayerGame: (lobbyId: string) => void
+  startMultiplayerGame: (lobbyId: string, gameType: GameType, cooldown: number) => void
   isPlayerInALobby: (lobbyId?: string) => boolean
+  updateLobbySettings: (lobbyId: string, gameType: GameType, cooldown: number) => void
 }
 
 const ColorIndicator = ({ color, active }: {color: PlayerColor, active: boolean}) => {
@@ -38,9 +40,27 @@ export const LobbyComp = ({
   joinLobby, 
   leaveLobby, 
   startMultiplayerGame, 
-  isPlayerInALobby 
+  isPlayerInALobby,
+  updateLobbySettings
 }: LobbyCompProps) => {
+  const countdowns = [0, 5, 10]
+
+  const [gameType, setGameType] = useState<GameType>(lobby.gameType)
+  const [cooldown, setCooldown] = useState(lobby.cooldown)
   const [editUsername, setEditUsername] = useState(false)
+
+  useEffect(() => {
+    setGameType(lobby.gameType)
+    setCooldown(lobby.cooldown)
+  }, [lobby.gameType, lobby.cooldown])
+
+  const updateSettingsWithServer = (gameType: GameType, cooldown: number) => {
+    if (isPlayerInALobby(lobby.id)) {
+      setGameType(gameType)
+      setCooldown(cooldown)
+      updateLobbySettings(lobby.id, gameType, cooldown)
+    }
+  }
 
   const handleInputConfirm = (event: KeyboardEvent) => {
     if (event.key === 'Enter') {
@@ -81,7 +101,10 @@ export const LobbyComp = ({
       return <div key={p.uuid} className={styles.player}>
         <ColorIndicator color={p.color} active={true} />
         <div className={styles.usernameContainer}>
-          <span className={styles.userName}>{p.username}</span>
+          <div className={styles.otherPlayer}>
+            <span className={styles.userName}>{p.username}</span>
+            <div className={`${styles.onlineStatus} ${p.online ? styles.online : ''}`}></div>
+          </div>
         </div>
       </div>
     }
@@ -89,8 +112,23 @@ export const LobbyComp = ({
 
   return (
     <Paper className={styles.container} elevation={3}>
-      <span className={styles.lobbyTitle}>Lobby</span>
+      <span className={styles.subTitle}>Lobby</span>
       <span className={styles.lobbyId}>{lobby.id}</span>
+      <div className={styles.settings} style={{ pointerEvents: isPlayerInALobby(lobby.id) ? 'all' : 'none' }}>
+        <div className={`${styles.settingsModeContainer}`}>
+          <span className={`text_span_small ${styles.subTitle}`}>Game Mode</span>
+          <div className={styles.buttonContainer}>
+            <button onClick={() => updateSettingsWithServer('NORMAL', cooldown)} className={`button small ${gameType == 'NORMAL' ? 'primary' : 'secondary'}`}>Normal</button>
+            <button onClick={() => updateSettingsWithServer('COMPETITION', cooldown)} className={`button small ${gameType == 'COMPETITION' ? 'primary' : 'secondary'}`}>Competition</button>
+          </div>
+        </div>
+        <div className={`${styles.settingsModeContainer} ${styles.settingsCooldownContainer} ${gameType == 'NORMAL' ? styles.hidden : ''}`}>
+          <span className={`text_span_small ${styles.subTitle}`}>Cooldown</span>
+          <div className={styles.buttonContainer}>
+            {countdowns.map(c => <button key={c} onClick={() => updateSettingsWithServer(gameType, c)} className={`button small ${cooldown == c ? 'primary' : 'secondary'}`}>{c}</button>)}
+          </div>
+        </div>
+      </div>
       {activeColors().map(c => {
         const player = lobby.players.filter(p => p.color == c.color)[0]
         if (player) {
@@ -100,7 +138,7 @@ export const LobbyComp = ({
         }
       })}
       {<button
-        onClick={() => startMultiplayerGame(lobby.id)}
+        onClick={() => startMultiplayerGame(lobby.id, gameType, cooldown)}
         className={`button primary`}
         disabled={!(lobby.players.length >= 2 && isPlayerInALobby(lobby.id))}
       >

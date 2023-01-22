@@ -1,7 +1,7 @@
 import styles from '../styles/Home.module.css'
 import { io, Socket } from "socket.io-client"
 import { useEffect, useState } from 'react'
-import { getUuid } from 'src/utils/helper'
+import { getUuid, handleNewUuid } from 'src/utils/helper'
 import { PlayerColor } from 'src/game/resources/playerColors'
 import { useRouter } from 'next/router';
 import { ClientToServerEvents, ServerToClientEvents } from 'src/utils/socketHelpers'
@@ -11,20 +11,26 @@ import { LobbyComp } from 'src/components/lobby/Lobby'
 import Image from 'next/image'
 import title_image from '../public/title_image.png'
 import lobbyBackground_image from '../public/lobbyBackground.png'
+import suggestions from '../public/suggestions.png'
+import { GameState, GameType } from 'src/game/resources/gameTypes'
 
-export interface Player {
+export interface Player extends PublicPlayer {
   uuid: string
-  username: string
-  color: PlayerColor
 }
 
 export interface PublicPlayer {
   username: string
   color: PlayerColor
+  nextMoveTime?: EpochTimeStamp
+  gameState?: GameState
+  diceValue?: number
+  online?: boolean
 }
 
 export interface Lobby {
   id: string
+  gameType: GameType,
+  cooldown: number,
   players: Player[]
 }
 
@@ -44,24 +50,27 @@ export default function Home() {
 
     socket.on('connect', () => {
       console.log('connected', socket.id)
-      socket.emit('requestUuid', getUuid())
+      socket.emit('requestUuid', undefined, getUuid(), (newUuid) => {
+        handleNewUuid(newUuid)
+      })
     })
 
-    socket.on('receiveUuid', newUuid => {
-      const uuid = getUuid()
+    // socket.on('receiveUuid', newUuid => {
+    //   const uuid = getUuid()
 
-      // Handle new UUID
-      if (newUuid == uuid) {
-        console.log("Expected case. No cookie update needed. Uuid:", uuid)
-      } else if (!uuid) {
-        console.log("No uuid set yet. Saving new uuid in cookie:", newUuid)
-        document.cookie = `uuid=${newUuid}; expires=${new Date(new Date().getTime()+60*60*1000*24).toUTCString()}`
-      } else {
-        console.error("Received a mismatching uuid. Unexpected error.")
-      }
-    })
+    //   // Handle new UUID
+    //   if (newUuid == uuid) {
+    //     console.log("Expected case. No cookie update needed. Uuid:", uuid)
+    //   } else if (!uuid) {
+    //     console.log("No uuid set yet. Saving new uuid in cookie:", newUuid)
+    //     document.cookie = `uuid=${newUuid}; expires=${new Date(new Date().getTime()+60*60*1000*24).toUTCString()}`
+    //   } else {
+    //     console.error("Received a mismatching uuid. Unexpected error.")
+    //   }
+    // })
 
     socket.on('updateLobbies', (lobbies, games) => {
+      console.log("Lobbies update:", lobbies)
       setLobbies(lobbies)
       games && setGames(games)
     })
@@ -75,6 +84,10 @@ export default function Home() {
 
   const createLobby = () => {
     socket.emit('createLobby', getUuid())
+  }
+
+  const updateLobbySettings = (lobbyId: string, gameType: GameType, cooldown: number) => {
+    socket.emit('changeLobbySettings', getUuid(), lobbyId, gameType, cooldown)
   }
 
   const joinLobby = (lobbyId: string, color: PlayerColor) => {
@@ -110,8 +123,8 @@ export default function Home() {
     router.push('/play')
   }
 
-  const startMultiplayerGame = (lobbyId: string) => {
-    socket.emit('startGame', lobbyId, getUuid())
+  const startMultiplayerGame = (lobbyId: string, gameType: GameType, cooldown: number) => {
+    socket.emit('startGame', lobbyId, getUuid(), gameType, cooldown)
   }
   
   return (
@@ -156,6 +169,7 @@ export default function Home() {
                   leaveLobby={leaveLobby}
                   startMultiplayerGame={startMultiplayerGame}
                   isPlayerInALobby={isPlayerInALobby}
+                  updateLobbySettings={updateLobbySettings}
                 />)}
               </div>
               {(!isPlayerInALobby() && lobbies.length > 0) && <div className={styles.bottomContainer}><button 
@@ -175,6 +189,14 @@ export default function Home() {
                 </div>)}
               </div>
             </Paper> */}
+            <div style={{ position: 'fixed', bottom: '1.5rem', right: '1.5rem', width: '3rem', height: '3rem' }}>
+              <Image 
+                src={suggestions} 
+                alt='leave a suggestion' 
+                layout='fill'
+                objectFit='contain'
+              />
+            </div>
           </div>
         </div>
       </div>

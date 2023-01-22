@@ -4,11 +4,12 @@ import { positions } from "./positions"
 
 export const getAvailableMovePaths = (
   playerPos: number,
-  playerColor: PlayerColor,
-  steps: number,
+  playerColor: PlayerColor | undefined,
+  steps: number | undefined,
   blocks: number[],
   pieces: Piece[],
 ) => {
+  if (!steps || !playerColor) return []
   let remainingSteps = steps
 
   let paths:number[][] = []

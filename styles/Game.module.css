@@ -11,7 +11,20 @@
 .infoContainer {
   width: 100%;
   height: 100%;
+  position: relative;
 }
+
+.bottomInfoContainer {
+  display: flex;
+  width: 100%;
+  flex-direction: column;
+  justify-content: end;
+  position: absolute;
+  bottom: 0;
+  right: 0;
+}
+
+
 
 .default {
   padding: 1rem;

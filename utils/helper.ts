@@ -33,8 +33,26 @@ export const createLobbyId = () => {
 
 export const getUuid = () => getCookie('uuid') as string
 
-export const getActivePlayer = (players: PublicPlayer[], activePlayerColor: PlayerColor) => {
-  if (!players || !activePlayerColor) return
-  console.log(players, activePlayerColor)
-  return players?.find(p => p.color == activePlayerColor)
+export const getPlayer = (players: PublicPlayer[], color: PlayerColor | undefined) => {
+  if (!players || !color) return
+  return players.filter(p => p.color == color)[0]
+}
+
+export const updatePlayers = (players: PublicPlayer[], newPlayer: PublicPlayer) => {
+  let newPlayers = players
+  const index = players.indexOf(players.filter(p => p.color == newPlayer.color)[0])
+  newPlayers.splice(index, 1, newPlayer)
+  return newPlayers
+}
+
+export const handleNewUuid = (newUuid: string) => {
+  const uuid = getUuid()
+  if (newUuid == uuid) {
+    console.log("Expected case. No cookie update needed. Uuid:", uuid)
+  } else if (!uuid) {
+    console.log("No uuid set yet. Saving new uuid in cookie:", newUuid)
+    document.cookie = `uuid=${newUuid}; expires=${new Date(new Date().getTime()+60*60*1000*24).toUTCString()}`
+  } else {
+    console.error("Received a mismatching uuid. Unexpected error.")
+  }
 }

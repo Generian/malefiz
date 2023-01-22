@@ -10,6 +10,7 @@ import yellow_player from '../public/yellow_player.png'
 import blue_player from '../public/blue_player.png'
 import { ConnectingLines } from './ConnectingLines'
 import { getPosition } from './Position'
+import { height } from '@mui/system'
 
 interface DecorationProps {
   spacing: number
@@ -22,14 +23,14 @@ interface Decor {
   x: number,
   y: number,
   width: number
-  type: 'POSITION' | 'BORDER' | 'CENTER'
+  type: 'POSITION' | 'BORDER' | 'CENTER',
 }
 
 const decor: Decor[] = [
   {
     image: gun,
     alt: 'gun',
-    x: 1,
+    x: 1.15,
     y: 14,
     width: 1.3,
     type: 'POSITION'
@@ -45,8 +46,8 @@ const decor: Decor[] = [
   {
     image: finish,
     alt: 'finish',
-    x: 8.22,
-    y: 14.2,
+    x: 8.24,
+    y: 14.22,
     width: 2.3,
     type: 'POSITION'
   },
@@ -109,17 +110,21 @@ export const Decoration = ({ spacing, positionSize }: DecorationProps) => {
         spacing={spacing}
         positionSize={positionSize}
       />
-      {decor.map(d => {
+      {decor.map((d, i) => {
         const coords = getPosition(d.x, d.y, spacing, positionSize, d.type)
 
         return <Image 
+          key={`${d.alt}_${i}`}
           src={d.image} 
           alt={d.alt} 
-          width={d.width * spacing} 
+          // width={d.width * spacing}
+          priority={true}
           style={{ 
             position: 'absolute', 
             top: coords.y, 
-            left: coords.x
+            left: coords.x,
+            width: d.width * spacing,
+            height: 'auto'
           }}/>
       })}
     </div>

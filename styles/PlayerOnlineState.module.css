@@ -1,0 +1,25 @@
+.container {
+  margin-bottom: 1rem;
+  display: flex;
+  flex-direction: column;
+  align-items: end;
+}
+
+.userContainer {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  border-right-style: solid;  
+  border-right-color: var(--red);
+  border-right-width: 0.5rem;
+  padding-right: 0.5rem;
+  margin-bottom: 0.25rem;
+  transition: all 0.3s ease-in-out;
+}
+
+.online {
+  border-right-color: var(--green);
+  border-right-width: 0.25rem;
+  padding-right: 0.75rem;
+}

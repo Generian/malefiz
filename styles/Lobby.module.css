@@ -103,8 +103,13 @@
   flex: 1;
 }
 
-.lobbyTitle {
-  font-size: 0.75rem;
+.otherPlayer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+}
+
+.subTitle {
   color: var(--gray3);
 }
 
@@ -113,4 +118,47 @@
   font-weight: bold;
   color: var(--coverBorder);
   margin-bottom: 0.75rem;
+}
+
+.onlineStatus {
+  width: 0.6rem;
+  height: 0.6rem;
+  border-radius: 0.3rem;
+  background-color: var(--red);
+  margin-left: 0.25rem;
+}
+
+.online {
+  display: none;
+}
+
+.settings {
+  display: flex;
+  width: 100%;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-around;
+  margin-bottom: 1rem;
+}
+
+.settingsModeContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.settingsCooldownContainer {
+  width: 130px;
+}
+
+.buttonContainer {
+  display: flex;
+  flex-direction: row;
+  gap: 0.5rem;
+}
+
+.hidden {
+  opacity: 0.25;
+  pointer-events: none;
 }
