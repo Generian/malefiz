@@ -386,7 +386,7 @@ const SocketHandler = (_: NextApiRequest, res: NextApiResponseWithSocket) => {
                 return {
                   ...newPlayer,
                   uuid: p.uuid,
-                  nextMoveTime: (newPlayer.gameState == 'ROLL_DICE' && newPlayer.diceValue != 6) ? new Date().getTime() + 5 * 1000 : player.nextMoveTime,
+                  nextMoveTime: (newPlayer.gameState == 'ROLL_DICE' && newPlayer.diceValue != 6) ? new Date().getTime() + game.cooldown * 1000 : player.nextMoveTime,
                 }
               } else {
                 return p
