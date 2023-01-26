@@ -8,6 +8,7 @@ import { Lobby, Player, PublicPlayer } from '..'
 import { createLobbyId } from 'src/utils/helper'
 import { nextPlayerColor, PlayerColor } from 'src/game/resources/playerColors'
 import { GameState, GameType, Piece } from 'src/game/resources/gameTypes'
+import { Action, initialiseGame, validateGameUpdate } from 'src/game/resources/gameValidation'
 
 interface SocketServer extends HTTPServer {
   io?: IOServer | undefined
@@ -33,18 +34,14 @@ interface Users {
 
 export interface Game {
   lobbyId: string
+  gameType: GameType
   players: Player[]
   activePlayerColor: PlayerColor
-  turn: number
-  data?: {
-    state: GameState, 
-    activePlayer: PlayerColor, 
-    dice: number | undefined, 
-    blockers: number[], 
-    playerPieces: Piece[]
-  }
-  gameType?: GameType
+  blocks: number[]
+  pieces: Piece[]
   cooldown: number
+  gameOver: boolean
+  actions: Action[]
 }
 
 interface Games {
@@ -52,10 +49,8 @@ interface Games {
 }
 
 export interface GameValidityData {
-  isLobbyValid: boolean
-  playerColor: PlayerColor | false
-  isGameInPlay: boolean
-  game: Game | false
+  game: Game | undefined
+  playerColor: PlayerColor | undefined
 }
 
 const SocketHandler = (_: NextApiRequest, res: NextApiResponseWithSocket) => {
@@ -110,19 +105,25 @@ const SocketHandler = (_: NextApiRequest, res: NextApiResponseWithSocket) => {
       return freeColors
     }
 
-    const getPublicPlayers = (lobbyId: string): PublicPlayer[] | undefined => {
+    const getPlayersWithOnlineState = (lobbyId: string): Player[] | undefined => {
       const game = games[lobbyId]
       if (!game) return
       return game.players.map(p => {
         return {
-          username: p.username,
-          color: p.color,
-          nextMoveTime: p.nextMoveTime,
-          gameState: p.gameState,
-          diceValue: p.diceValue,
+          ...p,
           online: users[p.uuid].online
         }
       })
+    }
+
+    const getGameWithPlayerOnlineState = (lobbyId: string): Game | undefined => {
+      const game = games[lobbyId]
+      const players = getPlayersWithOnlineState(lobbyId)
+      if (!game || !players) return
+      return {
+        ...game,
+        players: players
+      }
     }
 
     const updateOnlineStatus = (uuid: string, isOnline: boolean) => {
@@ -186,31 +187,23 @@ const SocketHandler = (_: NextApiRequest, res: NextApiResponseWithSocket) => {
           }
         }
 
-        // socket.emit('receiveUuid', newUuid)
+        // Find game that player might be in and attach it to the data package
+        const game = !!lid ? getGameWithPlayerOnlineState(lid) : undefined
+        const playerColor = game && game.players?.find(p => p.uuid == uuid)?.color
 
-        const game = !!lid && games[lid]
-        const playerColor = game && game.players?.filter(p => p.uuid == uuid)[0]?.color
-
-        const gameValidityData: GameValidityData = {
-          isLobbyValid: !!game,
-          playerColor: playerColor,
-          isGameInPlay: game && game?.turn > 1,
-          game: game          
+        const dataReturned: GameValidityData = {
+          game,
+          playerColor,
         }
 
         // Update the client
-        callback(newUuid, gameValidityData)
+        callback(newUuid, dataReturned)
 
         // Update all users
         io.emit('updateLobbies', lobbies, Object.values(games))
 
-        // Find lobby player might be in and send game data
-        if (game && game.data) {
-          io.emit('receiveGameUpdate', game, getPublicPlayers(game.lobbyId))
-        }
-
         if (game) {
-          io.emit('playerUpdate', game.lobbyId, getPublicPlayers(game.lobbyId))
+          io.emit('playerUpdate', game.lobbyId, getPlayersWithOnlineState(game.lobbyId))
         }
       })
 
@@ -324,87 +317,60 @@ const SocketHandler = (_: NextApiRequest, res: NextApiResponseWithSocket) => {
         }
       })
 
-      socket.on('startGame', (lobbyId: string, uuid: string, gameType: GameType, cooldown: number) => {
+      socket.on('startGame', (lobbyId: string, uuid: string) => {
         const lobby = getLobbyById(lobbyId)
 
-        if (!games[lobbyId] && lobby) {
-          games[lobbyId] = {
-            lobbyId: lobbyId,
-            players: lobby.players.map(p => {
-              return {
-                ...p,
-                nextMoveTime: new Date().getTime(),
-                gameState: 'ROLL_DICE'
-              }
-            }),
-            activePlayerColor: lobby.players.map(p => p.color)[0],
-            turn: 1,
-            gameType: gameType,
-            cooldown: cooldown
-          }
-          lobbies = lobbies.filter(l => l.id != lobby.id)
-          io.emit('triggerGameStart', lobbyId, lobby.players.map(p => p.uuid))
-          socket.broadcast.emit('updateLobbies', lobbies)
+        const isPlayerInLobby = !!lobby?.players.find(p => p.uuid == uuid)
+
+        if (!isPlayerInLobby) {
+          console.error("Player is not in lobby and can't start game.")
+          return
         }
-      })
 
-      // Game interaction
-      socket.on('getGameValidityAndColors', (lobbyId: string, uuid: string) => {
-        const game = games[lobbyId]
-        const playerColor = game?.players?.filter(p => p.uuid == uuid)[0]?.color
+        if (!games[lobbyId] && lobby) {
+          // Create new game
+          games[lobbyId] = initialiseGame(lobby.id, lobby.players, lobby.gameType, lobby.cooldown)
 
-        socket.emit('getGameValidityAndColors', !!game, playerColor, game?.activePlayerColor, game?.turn > 1, getPublicPlayers(lobbyId), game?.gameType)
+          // Start game for lobby
+          io.emit('startGame', lobbyId)
 
-        // Find lobby player might be in and send game data
-        if (game && game.data) {
-          socket.emit('receiveGameUpdate', 
-            game,
-            getPublicPlayers(game.lobbyId),
-          )
+          // Remove game lobby from lobbies
+          lobbies = lobbies.filter(l => l.id != lobby.id)
+
+          // Update all other lobbies
+          socket.broadcast.emit('updateLobbies', lobbies)
         }
       })
 
       socket.on('updateServerWithGameState', (
         lobbyId: string, 
         uuid: string,
-        state: GameState, 
-        activePlayer: PlayerColor, 
-        dice: number | undefined, 
-        blockers: number[], 
-        playerPieces: Piece[],
-        newPlayers: PublicPlayer[]
+        action: Action,
+        callback: (isValid: boolean, reason: string) => void
       ) => {
         const game = games[lobbyId]
         const player = game?.players?.find(p => p.uuid == uuid)
-        const itsPlayersTurn = (player?.color == game?.activePlayerColor) || (game?.gameType == 'COMPETITION' && player?.nextMoveTime && player?.nextMoveTime <= new Date().getTime())
 
-        if (game && player && itsPlayersTurn) {
-          if (game?.gameType == 'COMPETITION') {
-            games[lobbyId].players = game?.players?.map(p => {
-              const newPlayer = newPlayers.filter(p => p.color == player.color)[0]
-              if (p.color == player.color) {
-                return {
-                  ...newPlayer,
-                  uuid: p.uuid,
-                  nextMoveTime: (newPlayer.gameState == 'ROLL_DICE' && newPlayer.diceValue != 6) ? new Date().getTime() + game.cooldown * 1000 : player.nextMoveTime,
-                }
-              } else {
-                return p
-              }
-            })
+        if (game && player) {
+          let { isValid, reason, newGame } = validateGameUpdate({ game, color: player.color, action })
+
+          callback(isValid, reason)
+
+          if (isValid) {
+            games[lobbyId] = newGame
+            const game = getGameWithPlayerOnlineState(lobbyId)
+
+            if (game) {
+              io.emit('receiveGameUpdate', game)
+            } else {
+              console.error("No game found for distribution although update was valid.")
+            }
+          } else {
+            console.warn("Game update invalid. Rejecting update. Reason:", reason)
           }
-          games[lobbyId].activePlayerColor = activePlayer
-          games[lobbyId].turn += 1
-          game.data = {
-            state,
-            activePlayer,
-            dice,
-            blockers,
-            playerPieces
-          }
-          socket.broadcast.emit('receiveGameUpdate', game, getPublicPlayers(lobbyId))
+
         } else {
-          console.error("Error executing turn!", game, lobbyId, player, uuid, itsPlayersTurn)
+          console.error("Error executing turn! No game or player found. Game:", game, "Player:", player)
         }
       })
 
@@ -421,7 +387,7 @@ const SocketHandler = (_: NextApiRequest, res: NextApiResponseWithSocket) => {
           // Update games
           Object.values(games).forEach(game => {
             if (game.players.map(p => p.uuid).includes(uuid)) {
-              io.emit('playerUpdate', game.lobbyId, getPublicPlayers(game.lobbyId))
+              io.emit('playerUpdate', game.lobbyId, getPlayersWithOnlineState(game.lobbyId))
             }
           })
 

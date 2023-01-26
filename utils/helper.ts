@@ -1,3 +1,4 @@
+import { Piece } from "src/game/resources/gameTypes";
 import { PlayerColor } from "src/game/resources/playerColors";
 import { PublicPlayer } from "src/pages";
 

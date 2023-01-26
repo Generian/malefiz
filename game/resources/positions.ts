@@ -31,6 +31,12 @@ export const getResetPiecePosition = (piece: Piece, pieces: Piece[]) => {
   return freeStartingPositionIds[0]
 }
 
+export const getNewPiecePositions = (piece: Piece, newPiecePosition: number, pieces: Piece[]) => {
+  const index = pieces.findIndex(p => p.pos == piece.pos && p.color == piece.color)
+  const newPieces = [...pieces.slice(0, index), { ...piece, pos: newPiecePosition}, ...pieces.slice(index + 1)] as Piece[]
+  return newPieces
+}
+
 export const positions: Pos[] = [
   {
     id: 1,

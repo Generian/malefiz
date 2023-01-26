@@ -14,28 +14,44 @@ import { PublicPlayer } from 'src/pages'
 import { Layout } from 'src/components/Layout'
 import { Info, Infos } from './Infos'
 import { PlayerOnlineState } from './PlayerOnlineState'
+import { Action } from './resources/gameValidation'
+import { Game } from 'src/pages/api/socket'
 
 export const debugMode = false
 
 let socket: Socket<ServerToClientEvents, ClientToServerEvents>
 
-export const Game = () => {
+export const GameComp = () => {
   const router = useRouter()
   const { lid, r, g, y, b } = router.query
 
   // Generic states
   const [gameType, setGameType] = useState<GameType>('NORMAL')
   const [players, setPlayers] = useState<PublicPlayer[]>()
-  const [myColor, setMyColor] = useState<PlayerColor>()
-  const [blocks, setBlocks] = useState<number[]>(defaultBlocks)
   const [pieces, setPieces] = useState<Piece[]>()
-  const [infos, setInfos] = useState<Info[]>([])
+  const [blocks, setBlocks] = useState<number[]>(defaultBlocks)
+  const [activePlayerColor, setActivePlayerColor] = useState<PlayerColor>() // FYI: This one is not required in competition mode, given that all players are active at the same time and their move right is only bound by the dice countdown.
+
+  // Local-only data
+  const [myColor, setMyColor] = useState<PlayerColor>()
   const [activePiece, setActivePiece] = useState<Piece>()
 
+  // Auxiliary state
+  const [isOnlineGame, setIsOnlineGame] = useState(!!lid)
+  const [infos, setInfos] = useState<Info[]>([])
+
   // Normal mode
-  const [gameState, setGameState] = useState<GameState>('ROLL_DICE')
-  const [diceValue, setDiceValue] = useState<number | undefined>()
-  const [activePlayerColor, setActivePlayerColor] = useState<PlayerColor>() // FYI: This one is not required in competition mode, given that all players are active at the same time and their move right is only bound by the dice countdown.
+  // const [gameState, setGameState] = useState<GameState>('ROLL_DICE')
+  // const [diceValue, setDiceValue] = useState<number | undefined>()
+
+  const updateGameStateWithNewGameData = (newGame: Game) => {
+    // Set game details
+    setGameType(newGame.gameType)
+    setPlayers(newGame.players)
+    setPieces(newGame.pieces)
+    setBlocks(newGame.blocks)
+    setActivePlayerColor(newGame.activePlayerColor)
+  }
 
   // Initialise local game
   useEffect(() => {
@@ -53,6 +69,7 @@ export const Game = () => {
   useEffect(() => {
     if (typeof lid == 'string') {
       socketInitializer()
+      setIsOnlineGame(true)
     }
   }, [lid])
 
@@ -101,71 +118,25 @@ export const Game = () => {
       socket.emit('requestUuid', lid, getUuid(), (newUuid, gameValidityData) => {
         handleNewUuid(newUuid)
 
-        const { isLobbyValid, playerColor, isGameInPlay, game } = gameValidityData
-        if (!isLobbyValid) {
-          console.error("Game lobby ID is not valid. Redirecting back to Lobby")
+        const { game, playerColor } = gameValidityData
+        if (!game) {
+          console.error("Game lobby ID is not valid. Redirecting back to Lobby.")
+          router.push('/')
+        } else if (!playerColor) {
+          console.error("Player not in given game. Redirecting back to Lobby.")
           router.push('/')
         } else {
-          if (game) {
-            game.gameType && setGameType(game.gameType)
-            playerColor && setMyColor(playerColor)
-            game.players && setPlayers(game.players)
-            if (!isGameInPlay) {
-              game.activePlayerColor && setActivePlayerColor(game.activePlayerColor)
-              game.players && setPieces(initialisePieces(game.players.map(p => p.color)))
-            }
-          }
-        }
+          // Set game details
+          updateGameStateWithNewGameData(game)
 
-
-        if (typeof lid == 'string') {
-          console.log("getting init data", lid, getUuid(), socket)
-          socket.emit('getGameValidityAndColors', lid, getUuid())
-        } else {
-          console.error("no lobby ID yet")
+          // Set player's color
+          setMyColor(playerColor)
         }
       })
     })
 
-    // socket.on('receiveUuid', newUuid => {
-    //   const uuid = getUuid()
-
-    //   // Handle new UUID
-    //   if (newUuid == uuid) {
-    //     console.log("Expected case. No cookie update needed. Uuid:", uuid)
-    //   } else if (!uuid) {
-    //     console.warn("No uuid set yet. Saving new uuid in cookie:", newUuid)
-    //     document.cookie = `uuid=${newUuid}; expires=${new Date(new Date().getTime()+60*60*1000*24).toUTCString()}`
-    //   } else {
-    //     console.error("Received a mismatching uuid. Unexpected error.")
-    //   }
-
-    //   if (typeof lid == 'string') {
-    //     console.log("getting init data", lid, getUuid(), socket)
-    //     socket.emit('getGameValidityAndColors', lid, getUuid())
-    //   } else {
-    //     console.error("no lobby ID yet")
-    //   }
-    // })
-
-    socket.on('getGameValidityAndColors', (lobbyValid, playerColor, activePlayerColor, isInPlay, allPlayers, gameType) => {
-      if (!lobbyValid) {
-        console.error("Game lobby ID is not valid.", playerColor)
-        router.push('/')
-      } else {
-        gameType && setGameType(gameType)
-        playerColor && setMyColor(playerColor)
-        setPlayers(allPlayers)
-        if (!isInPlay) {
-          setActivePlayerColor(activePlayerColor)
-          setPieces(initialisePieces(allPlayers.map(p => p.color)))
-        }
-      }
-    })
-
     socket.on('receiveGameUpdate', (
-      game,
-      allPlayers
+      game
     ) => {
       console.log("receive game update", game, allPlayers)
       if (game.data && game.gameType) {
@@ -208,24 +179,13 @@ export const Game = () => {
 
   // Multiplayer interaction
   const updateServerWithGameState = (
-    newGameState: GameState = gameState,
-    newActivePlayer: PlayerColor | undefined = activePlayerColor,
-    newDiceValue: number | undefined = diceValue,
-    newBlocks: number[] = blocks,
-    newPieces: Piece[] | undefined = pieces,
-    newPlayers: PublicPlayer[] | undefined = players
+    action: Action
   ) => {
-    if (!newActivePlayer || !newPieces) return
     if (typeof lid == 'string') {
       socket.emit('updateServerWithGameState', 
       lid, 
       getUuid(), 
-      newGameState, 
-      newActivePlayer, 
-      newDiceValue, 
-      newBlocks, 
-      newPieces, 
-      newPlayers)
+      action)
     }
   }
 
@@ -235,8 +195,6 @@ export const Game = () => {
   const playerRolledDice = (
     diceValue: number,
   ) => {
-    console.log("updating player state", myTurn(), gameType, myColor, players)
-
     if (!myTurn()) return
     if (gameType == 'NORMAL') {
       if (gameState == 'ROLL_DICE') {
@@ -453,27 +411,23 @@ export const Game = () => {
           }
           instructions={
             <div className={styles.infoContainer}>
-            {/* {gameState == 'END' && <div className={styles.default}>
-              <span>Winner: {pieces.filter(p => p.pos == winningPosId)[0].color}</span>
-            </div>} */}
-            {/* {myColor && <div className={styles.default}><span>Your color: </span><span className={`${styles[myColor]} ${styles.bold}`}>{myColor}</span></div>} */}
-            {<DiceRoller
-              diceValue = {gameType == 'COMPETITION' ? getPlayer(players, myColor)?.diceValue : diceValue}
-              setDiceValue={playerRolledDice}
-              showDice={myTurn() && gameType == 'COMPETITION' ? getPlayer(players, myColor)?.gameState != 'MOVE_BLOCK' : gameState != 'MOVE_BLOCK' && activePlayerColor == myColor}
-              enableDice={myTurn() && gameType == 'COMPETITION' ? getPlayer(players, myColor)?.gameState == 'ROLL_DICE' : gameState == 'ROLL_DICE'}
-              activePlayerColor={gameType == 'COMPETITION' ? myColor ? myColor : activePlayerColor : activePlayerColor}
-              nextMoveTime={myColor && getPlayer(players, myColor)?.nextMoveTime}
-            />}
-            <div className={styles.bottomInfoContainer}>
-              {<Infos 
-                infos={infos}
-                setInfos={setInfos}
+              {<DiceRoller
+                diceValue = {gameType == 'COMPETITION' ? getPlayer(players, myColor)?.diceValue : diceValue}
+                setDiceValue={playerRolledDice}
+                showDice={myTurn() && gameType == 'COMPETITION' ? getPlayer(players, myColor)?.gameState != 'MOVE_BLOCK' : gameState != 'MOVE_BLOCK' && activePlayerColor == myColor}
+                enableDice={myTurn() && gameType == 'COMPETITION' ? getPlayer(players, myColor)?.gameState == 'ROLL_DICE' : gameState == 'ROLL_DICE'}
+                activePlayerColor={gameType == 'COMPETITION' ? myColor ? myColor : activePlayerColor : activePlayerColor}
+                nextMoveTime={myColor && getPlayer(players, myColor)?.nextMoveTime}
               />}
-              {<PlayerOnlineState players={players} />}
-            </div>
-            {debugMode && <button onClick={() => console.log("pieces:", pieces)}>Print pieces</button>}
-            {debugMode && <button onClick={() => console.log("players:", players, myColor, activePiece, gameState)}>Print players</button>}
+              <div className={styles.bottomInfoContainer}>
+                {<Infos 
+                  infos={infos}
+                  setInfos={setInfos}
+                />}
+                {!!lid && <PlayerOnlineState players={players} />}
+              </div>
+              {debugMode && <button onClick={() => console.log("pieces:", pieces)}>Print pieces</button>}
+              {debugMode && <button onClick={() => console.log("players:", players, myColor, activePiece, gameState)}>Print players</button>}
             </div>
           }
         />

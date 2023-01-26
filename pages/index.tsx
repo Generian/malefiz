@@ -50,7 +50,7 @@ export default function Home() {
 
     socket.on('connect', () => {
       console.log('connected', socket.id)
-      socket.emit('requestUuid', undefined, getUuid(), (newUuid) => {
+      socket.emit('requestUuid', undefined, getUuid(), (newUuid, gameValidityData) => {
         handleNewUuid(newUuid)
       })
     })
@@ -75,8 +75,8 @@ export default function Home() {
       games && setGames(games)
     })
 
-    socket.on('triggerGameStart', (lobbyId, players) => {
-      if (players.includes(getUuid())) {
+    socket.on('startGame', (lobbyId) => {
+      if (!!lobbies.find(l => l.id == lobbyId)?.players.find(p => p.uuid == getUuid())) {
         router.push(`/play?lid=${lobbyId}`)
       }
     })
@@ -123,8 +123,8 @@ export default function Home() {
     router.push('/play')
   }
 
-  const startMultiplayerGame = (lobbyId: string, gameType: GameType, cooldown: number) => {
-    socket.emit('startGame', lobbyId, getUuid(), gameType, cooldown)
+  const startMultiplayerGame = (lobbyId: string) => {
+    socket.emit('startGame', lobbyId, getUuid())
   }
   
   return (
