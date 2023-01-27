@@ -117,7 +117,6 @@
   font-size: 1.25rem;
   font-weight: bold;
   color: var(--coverBorder);
-  margin-bottom: 0.75rem;
 }
 
 .onlineStatus {
@@ -141,11 +140,18 @@
   margin-bottom: 1rem;
 }
 
+@media only screen and (max-width: 600px) {
+  .settings {
+    flex-direction: column;
+  }
+}
+
 .settingsModeContainer {
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 0.5rem;
+  margin-top: 0.75rem;
 }
 
 .settingsCooldownContainer {

@@ -5,6 +5,7 @@
   background-color: var(--positionsColor);
   box-sizing: border-box;
   box-shadow: rgba(0, 0, 0, 0.15) 1.95px 1.95px 2.6px;
+  cursor: pointer;
 }
 
 .default div {
@@ -17,7 +18,15 @@
 }
 
 .highlightMovePosition {
-  background-color: var(--highlightColor)!important;
+  /* background-color: var(--highlightColor)!important; */
+  border: 0.25rem dashed var(--gray3);
+  transition: all 0.15s ease-in-out;
+}
+
+.highlightMovePosition:hover {
+  background-color: var(--gray3);
+  border-color: var(--lines);
+  cursor: pointer;
 }
 
 .BLOCK_MARKER {

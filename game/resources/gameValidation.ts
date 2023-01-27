@@ -20,7 +20,7 @@ interface UPDATE_ROLL_DICE {
 
 interface UPDATE_MOVE_PIECE {
   updateType: 'MOVE_PIECE'
-  activePiece: Piece
+  activePiece?: Piece
   newPositionId: number
 }
 
@@ -38,6 +38,10 @@ const updatePlayers = (game: Game, newPlayer: Player) => {
   return newGame
 }
 
+const nextMoveTime = (game: Game) => {
+ return new Date().getTime() + game.cooldown * 1000
+}
+
 export const validateGameUpdate = ({ game, color, action }: GameUpdate) => {
   const player = game.players.find(p => p.color == color)
   
@@ -47,129 +51,168 @@ export const validateGameUpdate = ({ game, color, action }: GameUpdate) => {
   let newPlayer = player
   let itsPlayersTurn = false
 
-  // Check if it's players turn
-  if (player?.gameState == action.updateType) { // Check if player is executing correct turn.
-    if (game.gameType == 'NORMAL') {
-      itsPlayersTurn = game.activePlayerColor == color
-    } else if (game.gameType == 'COMPETITION') {
-      itsPlayersTurn = !!player?.nextMoveTime && player?.nextMoveTime <= new Date().getTime()
-    }
-  } else {
-    reason = `Player trying to execute ${action.updateType} although they should ${player?.gameState}.`
-  }
-
-  if (!!newPlayer) {
-    if (!itsPlayersTurn) {
-      reason = "Not player's turn."
+  if (!game.gameOver) {
+    // Check if it's players turn
+    if (player?.gameState == action.updateType) { // Check if player is executing correct turn.
+      if (game.gameType == 'NORMAL') {
+        itsPlayersTurn = game.activePlayerColor == color
+      } else if (game.gameType == 'COMPETITION') {
+        itsPlayersTurn = !!player?.nextMoveTime && player?.nextMoveTime <= new Date().getTime()
+      }
     } else {
-      switch (action.updateType) {
-        case 'ROLL_DICE':
-          newPlayer.diceValue = action.diceValue
-          newPlayer.gameState = 'MOVE_PIECE'
-          newGame.infos = [...newGame.infos, {
-            infoType: 'ROLLED_DICE',
-            player: newPlayer,
-            diceValue: action.diceValue
-          }]
-          isValid = true
-          break
+      reason = `Player trying to execute ${action.updateType} although they should ${player?.gameState}.`
+    }
 
-        case 'MOVE_PIECE':
-          // Check if piece still in position
-          if (!game.pieces.find(p => p.pos == action.activePiece.pos && p.color == action.activePiece.color)) {
-            reason = "Piece no longer in given position."
+    if (!!newPlayer) {
+      if (!itsPlayersTurn) {
+        reason = "Not player's turn."
+      } else {
+        switch (action.updateType) {
+          case 'ROLL_DICE':
+            newPlayer.diceValue = action.diceValue
+            newPlayer.gameState = 'MOVE_PIECE'
+            newGame.infos = [...newGame.infos, {
+              infoType: 'ROLLED_DICE',
+              player: newPlayer,
+              diceValue: action.diceValue
+            }]
+            isValid = true
             break
-          }
 
-          const moveOptions = getAvailableMovePaths(action.activePiece.pos, newPlayer.color, newPlayer.diceValue, game.blocks, game.pieces).map(p => p[p.length - 1])
+          case 'MOVE_PIECE':
+            let pieceToMove: Piece[] | Piece | undefined = undefined
 
-          // Filter out pieces of other players to check kick possibility:
-          const otherPlayerPieces = game.pieces.filter(p => p.color != color)
-
-          if (moveOptions.includes(action.newPositionId)) {
-            newGame.pieces = getNewPiecePositions(action.activePiece, action.newPositionId, game.pieces)
-            newPlayer.gameState = 'ROLL_DICE'
-
-            if (game.blocks.includes(action.newPositionId)) {
-              newGame.blocks = game.blocks.filter(b => b != action.newPositionId)
-              newPlayer.gameState = 'MOVE_BLOCK'
-            } else if (otherPlayerPieces.map(p => p.pos).includes(action.newPositionId)) {
-              const pieceToReset = otherPlayerPieces.filter(o => o.pos == action.newPositionId)[0]
-              newGame.pieces = getNewPiecePositions(pieceToReset, getResetPiecePosition(pieceToReset, game.pieces), newGame.pieces)
-              newGame.infos = [...newGame.infos, {
-                infoType: 'KICKED_PLAYER',
-                player: newPlayer,
-                kickedPlayer: game.players.find(p => p.color == pieceToReset.color)
-              }]
+            if (action.activePiece) {
+              // Check if piece still in position
+              if (!game.pieces.find(p => p.pos == action.activePiece?.pos && p.color == action.activePiece?.color)) {
+                reason = "Piece no longer in given position."
+                break
+              }
+              pieceToMove = action.activePiece
+            } else if (!action.activePiece) {
+              pieceToMove = []
+              const playerPieces = game.pieces.filter(p => p.color == color)
+              for (let i = 0; i < playerPieces.length; i++) {
+                const pieceMoveOptions = getAvailableMovePaths(playerPieces[i].pos, color, newPlayer.diceValue, game.blocks, game.pieces).map(p => p[p.length - 1])
+                if (pieceMoveOptions.includes(action.newPositionId)) {
+                  pieceToMove = [...pieceToMove, playerPieces[i]]
+                }
+              }
+            }     
+            
+            if (!pieceToMove || (Array.isArray(pieceToMove) && pieceToMove.length == 0)) {
+              reason = "Can't find any piece to move to selected position."
+              break
+            } else if (Array.isArray(pieceToMove)) {
+              if (pieceToMove.length > 1) {
+                reason = "Found more than one piece to move. Please select the piece to move first."
+                break
+              } else {
+                pieceToMove = pieceToMove[0]
+              }
             }
 
-            if (newPlayer.diceValue != 6 && newPlayer.gameState != 'MOVE_BLOCK' && newGame.gameType == 'NORMAL') {
-              const nextColor = nextPlayerColor(game.activePlayerColor, game.players.map(p => p.color))
-              newGame.activePlayerColor = nextColor
-              newGame.infos = [...newGame.infos, {
-                infoType: 'TURN',
-                player: newGame.players.filter(p => p.color == nextColor)[0]
-              }]
-            }
+            // Filter out pieces of other players to check kick possibility:
+            const otherPlayerPieces = game.pieces.filter(p => p.color != color)
 
-            if (action.newPositionId == winningPosId) {
-              newGame.gameOver = true
+            const moveOptions = getAvailableMovePaths(pieceToMove.pos, newPlayer.color, newPlayer.diceValue, game.blocks, game.pieces).map(p => p[p.length - 1])
+
+            if (moveOptions.includes(action.newPositionId) && pieceToMove) {
+              newGame.pieces = getNewPiecePositions(pieceToMove, action.newPositionId, game.pieces)
+              newPlayer.gameState = 'ROLL_DICE'
+
+              if (game.blocks.includes(action.newPositionId)) {
+                newGame.blocks = game.blocks.filter(b => b != action.newPositionId)
+                newPlayer.gameState = 'MOVE_BLOCK'
+              } else if (otherPlayerPieces.map(p => p.pos).includes(action.newPositionId)) {
+                const pieceToReset = otherPlayerPieces.filter(o => o.pos == action.newPositionId)[0]
+                newGame.pieces = getNewPiecePositions(pieceToReset, getResetPiecePosition(pieceToReset, game.pieces), newGame.pieces)
+                newGame.infos = [...newGame.infos, {
+                  infoType: 'KICKED_PLAYER',
+                  player: newPlayer,
+                  kickedPlayer: game.players.find(p => p.color == pieceToReset.color)
+                }]
+              }
+
+              if (newPlayer.diceValue != 6 && newPlayer.gameState != 'MOVE_BLOCK') {
+                if (game.gameType == 'COMPETITION') {
+                  newPlayer.nextMoveTime = nextMoveTime(game)
+                } else if (game.gameType == 'NORMAL') {
+                  const nextColor = nextPlayerColor(game.activePlayerColor, game.players.map(p => p.color))
+                  newGame.activePlayerColor = nextColor
+                  newGame.infos = [...newGame.infos, {
+                    infoType: 'TURN',
+                    player: newGame.players.filter(p => p.color == nextColor)[0]
+                  }]
+                }
+              }
+
+              if (action.newPositionId == winningPosId) {
+                newGame.gameOver = true
+                newGame.infos = [...newGame.infos, {
+                  infoType: 'GAMEOVER',
+                  player: newPlayer
+                }]
+              }
+
+              isValid = true
+
+            } else {
+              reason = "Piece can't be moved. Not a valid move option."
+            }
+            break
+
+          case 'MOVE_BLOCK':
+            const blockMoveOptions = positions
+              .filter(p => p.y > 1) // Filter out first rows
+              .filter(p => p.y < Math.max(...positions.map(p => p.y))) // Filter out winning row
+              .map(p => p.id)
+              .filter(p => !game.blocks.includes(p)) // Filter for blocks
+              .filter(p => !game.pieces.map(p => p.pos).includes(p)) // Filter out positions with players
+
+            if (blockMoveOptions.includes(action.newPositionId)) {
+              newGame.blocks = [...newGame.blocks, action.newPositionId]
+              newPlayer.gameState = 'ROLL_DICE'
+
               newGame.infos = [...newGame.infos, {
-                infoType: 'GAMEOVER',
+                infoType: 'MOVED_BLOCK',
                 player: newPlayer
               }]
+
+              if (player?.diceValue != 6) {
+                if (game.gameType == 'COMPETITION') {
+                  newPlayer.nextMoveTime = nextMoveTime(game)
+                } else if (game.gameType == 'NORMAL') {
+                  newGame.activePlayerColor = nextPlayerColor(game.activePlayerColor, game.players.map(p => p.color))
+                  newGame.infos = [...newGame.infos, {
+                    infoType: 'TURN',
+                    player: newGame.players.filter(p => p.color == newGame.activePlayerColor)[0]
+                  }]
+                }
+              }
+
+              isValid = true
+
+            } else {
+              reason = "Can't move block to selected position."
             }
-
-            isValid = true
-
-          } else {
-            reason = "Piece can't be moved. Not a valid move option."
-          }
-          break
-
-        case 'MOVE_BLOCK':
-          const blockMoveOptions = positions
-            .filter(p => p.y > 1) // Filter out first rows
-            .map(p => p.id)
-            .filter(p => !game.blocks.includes(p)) // Filter for blocks
-            .filter(p => !game.pieces.map(p => p.pos).includes(p)) // Filter out positions with players
-
-          if (blockMoveOptions.includes(action.newPositionId)) {
-            newGame.blocks = [...newGame.blocks, action.newPositionId]
-            newPlayer.gameState = 'ROLL_DICE'
-            newGame.infos = [...newGame.infos, {
-              infoType: 'MOVED_BLOCK',
-              player: newPlayer
-            }]
-
-            if (player?.diceValue != 6) {
-              newGame.activePlayerColor = nextPlayerColor(game.activePlayerColor, game.players.map(p => p.color))
-              newGame.infos = [...newGame.infos, {
-                infoType: 'TURN',
-                player: newGame.players.filter(p => p.color == newGame.activePlayerColor)[0]
-              }]
-              console.log("check")
-            }
-
-            isValid = true
-
-          } else {
-            reason = "Can't move block to selected position."
-          }
-          break
-      
-        default:
-          reason = `Update type not supported: ${action}`
-          break
+            break
+        
+          default:
+            reason = `Update type not supported: ${action}`
+            break
+        }
       }
+      updatePlayers(newGame, newPlayer)
+    } else {
+      reason = "No player to execute turn could be identified."
     }
-    updatePlayers(newGame, newPlayer)
-  } else {
-    reason = "No player to execute turn could be identified."
-  }
 
-  if (isValid && newGame.actions) {
-    newGame.actions = [...newGame.actions, action]
+    if (isValid && newGame.actions) {
+      newGame.actions = [...newGame.actions, action]
+    }
+  } else {
+    reason = "Game is over."
   }
 
   return { isValid, reason, newGame }

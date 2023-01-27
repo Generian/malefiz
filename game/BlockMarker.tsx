@@ -1,11 +1,27 @@
 import styles from 'styles/BlockMarker.module.css'
-import { PIECE_SIZE } from './resources/styles'
 
-export const BlockMarker = ({ pieceSize }: { pieceSize: number }) => {
+interface BlockMarkerProps {
+  pieceSize: number
+  cursor?: {
+    x: number
+    y: number
+  }
+}
+
+export const BlockMarker = ({ pieceSize, cursor }: BlockMarkerProps) => {
   return (
     <div 
       className={styles.default}
-      style={{ width: pieceSize, height:pieceSize, borderRadius: pieceSize/2 }}
+      style={{ 
+        width: pieceSize, 
+        height:pieceSize, 
+        borderRadius: pieceSize/2, 
+        position: cursor ? 'fixed' : 'relative', 
+        left: cursor ? cursor.x - pieceSize/2 : '', 
+        top: cursor ? cursor.y - pieceSize/2 : '', 
+        pointerEvents: cursor ? 'none' : 'all',
+        zIndex: cursor ? 2 : ''
+      }}
     >
     </div>
   )

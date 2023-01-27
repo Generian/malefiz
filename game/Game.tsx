@@ -236,18 +236,14 @@ export const GameComp = () => {
   const moveActivePiece = (posId: number) => {
     if (!myTurn()) return
 
-    if (activePiece) {
-      const action: Action = {
-        updateType: 'MOVE_PIECE',
-        activePiece: activePiece,
-        newPositionId: posId
-      }
-
-      validateActionAndUpdate(action)
-      setActivePiece(undefined)
-    } else {
-      console.log("No active piece to move found")
+    const action: Action = {
+      updateType: 'MOVE_PIECE',
+      activePiece: activePiece,
+      newPositionId: posId
     }
+
+    validateActionAndUpdate(action)
+    activePiece && setActivePiece(undefined)
   }
 
   const moveBlock = (posId: number) => {
@@ -286,10 +282,7 @@ export const GameComp = () => {
         console.warn("Unexpected click on board. Player:", player)
         break
     }
-
   }
-
-
 
   return (
     <div className={styles.container}>
@@ -304,14 +297,16 @@ export const GameComp = () => {
                 getActivePlayer()?.diceValue, 
                 blocks, 
                 pieces)}
+              blocks={blocks}
+              showBlockerCursor={getActivePlayer()?.gameState == 'MOVE_BLOCK'}
+              activePiece={activePiece}
               handleClick={handleClick}
               handlePieceClick={playerSelectedPiece}
-              blocks={blocks}
             />
           }
           instructions={
             <div className={styles.infoContainer}>
-              {<DiceRoller
+              {!isGameOver && <DiceRoller
                 diceValue = {getActivePlayer()?.diceValue}
                 setDiceValue={playerRolledDice}
                 showDice={myTurn() && getActivePlayer()?.gameState != 'MOVE_BLOCK'}

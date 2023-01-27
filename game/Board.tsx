@@ -7,24 +7,45 @@ import { Decoration } from './Decoration'
 import { Piece } from './resources/gameTypes'
 import { useWindowSize } from 'src/utils/windowSize'
 import { getSquareSize } from 'src/components/Layout'
+import { BlockMarker } from './BlockMarker'
+import { useEffect, useState } from 'react'
 
 
 interface BoardProps {
-  pieces: Piece[],
-  paths: number[][] | false,
-  handleClick: (posId: number) => void,
-  handlePieceClick: (piece: Piece) => void,
-  blocks: number[],
+  pieces: Piece[]
+  paths: number[][] | false
+  blocks: number[]
+  showBlockerCursor: boolean
+  activePiece?: Piece
+  handleClick: (posId: number) => void
+  handlePieceClick: (piece: Piece) => void
 }
 
 export const Board = ({ 
   pieces,
   paths,
   blocks,
+  showBlockerCursor,
+  activePiece,
   handleClick,
   handlePieceClick
 }: BoardProps) => {
   const windowSize = useWindowSize()
+  const [mousePos, setMousePos] = useState<{x: number, y: number}>()
+
+  useEffect(() => {
+    const handleMouseMove = (event: { clientX: any; clientY: any }) => {
+      setMousePos({ x: event.clientX, y: event.clientY })
+    }
+    window.addEventListener('mousemove', handleMouseMove)
+    return () => {
+      window.removeEventListener(
+        'mousemove',
+        handleMouseMove
+      )
+    }
+  }, [])
+
   const boardSize = getSquareSize(windowSize) - 32
   const maxPosDimension = Math.max(...positions.map(p => p.x), ...positions.map(p => p.y))
   const spacing = boardSize / (maxPosDimension + 1)
@@ -37,6 +58,12 @@ export const Board = ({
       className={`${styles.container} background`}
       style={{ minWidth: boardSize, minHeight: boardSize }}
     >
+      {showBlockerCursor && <BlockMarker pieceSize={pieceSize} cursor={mousePos}/>}
+      {activePiece && <PieceMarker 
+          piece={activePiece}
+          cursor={mousePos}
+          pieceSize={pieceSize}
+        />}
       <Decoration 
         spacing={spacing}
         positionSize={positionSize}
@@ -51,12 +78,16 @@ export const Board = ({
         positionSize={positionSize}
         pieceSize={pieceSize}
       >
-        {pieces.filter(piece => piece.pos == pos.id).map((piece, i) => <PieceMarker 
-          key={i}
-          piece={piece}
-          pieceSize={pieceSize}
-          handleClick={handlePieceClick}
-        />)}
+        {pieces
+          .filter(piece => piece.pos == pos.id)
+          .filter(piece => piece.pos != activePiece?.pos)
+          .map((piece, i) => <PieceMarker 
+            key={i}
+            piece={piece}
+            pieceSize={pieceSize}
+            handleClick={handlePieceClick}
+          />)
+        }
       </Position>)}
     </div>
   )

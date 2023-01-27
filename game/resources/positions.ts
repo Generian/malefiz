@@ -717,8 +717,8 @@ export const positions: Pos[] = [
   },
   {
     id: 115,
-    x: 9,
-    y: 14.19,
+    x: 8.99,
+    y: 14.11,
     connections: [106],
     type: 'FINISH'
   },

@@ -52,7 +52,11 @@ export const Position = ({ id, blocked, children, highlightMovePosition, handleC
     >
       <div
         className={`${styles.default} ${highlightMovePosition ?styles.highlightMovePosition : ''} ${position.color ? styles[position.color] : ''} ${!!position.type ? styles[position.type] : ''}`}
-        style={{ width: positionSize, height:positionSize, borderRadius: positionSize/2 }}
+        style={{ 
+          width: positionSize, 
+          height:positionSize, 
+          borderRadius: positionSize/2
+        }}
       >
         {children}
         {blocked && <BlockMarker pieceSize={pieceSize}/>}
