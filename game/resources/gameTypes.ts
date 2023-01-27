@@ -7,7 +7,7 @@ export interface Piece {
   color: PlayerColor
 }
 
-export type GameState = 'ROLL_DICE' | 'SELECT_PIECE' | 'MOVE_PIECE' | 'MOVE_BLOCK' | 'END'
+export type GameState = 'ROLL_DICE' | 'MOVE_PIECE' | 'MOVE_BLOCK' | 'END'
 
 export type GameStateCompetition = {
   [key in PlayerColor]: GameState

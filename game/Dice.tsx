@@ -9,7 +9,7 @@ interface DiceProps {
   setDiceValue: (value: number, playerId?: number) => void,
   enableDice: boolean
   showDice: boolean
-  activePlayerColor: PlayerColor
+  activePlayerColor: PlayerColor | undefined
   nextMoveTime?: EpochTimeStamp
 }
 

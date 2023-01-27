@@ -12,7 +12,8 @@ export const activeColors = (red: boolean = true, green: boolean = true, yellow:
   const publicPlayers = colors.map((c, i) => {
     return {
       username: `Player ${i+1}`,
-      color: c
+      color: c,
+      uuid: ''
     }
   })
 

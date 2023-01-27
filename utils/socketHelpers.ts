@@ -7,10 +7,10 @@ import { Game, GameValidityData } from "src/pages/api/socket"
 export interface ServerToClientEvents {
   receiveUuid: (uuid: string) => void
   updateLobbies: (lobbies: Lobby[], games?: Game[]) => void
-  startGame: (lobbyId: string) => void
-  getGameValidityAndColors: (lobbyValid: boolean, playerColor: PlayerColor, activePlayerColor: PlayerColor, isInPlay: boolean, allPlayers: PublicPlayer[], gameType?: GameType) => void
+  startGame: (lobbyId: string, uuids: string[]) => void
+  getGameValidityAndColors: (lobbyValid: boolean, playerColor: PlayerColor, activePlayerColor: PlayerColor, isInPlay: boolean, allPlayers: Player[], gameType?: GameType) => void
   receiveGameUpdate: (game: Game) => void
-  playerUpdate: (lobbyId: string, players: PublicPlayer[]) => void
+  playerUpdate: (lobbyId: string, players: Player[]) => void
 }
 
 export interface ClientToServerEvents {
@@ -29,5 +29,5 @@ export interface ClientToServerEvents {
     action: Action,
     callback: (isValid: boolean, reason: string) => void
   ) => void
-  playerUpdate: (players: PublicPlayer[]) => void
+  playerUpdate: (players: Player[]) => void
 }

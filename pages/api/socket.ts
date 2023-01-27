@@ -9,6 +9,7 @@ import { createLobbyId } from 'src/utils/helper'
 import { nextPlayerColor, PlayerColor } from 'src/game/resources/playerColors'
 import { GameState, GameType, Piece } from 'src/game/resources/gameTypes'
 import { Action, initialiseGame, validateGameUpdate } from 'src/game/resources/gameValidation'
+import { Info } from 'src/game/Infos'
 
 interface SocketServer extends HTTPServer {
   io?: IOServer | undefined
@@ -41,7 +42,8 @@ export interface Game {
   pieces: Piece[]
   cooldown: number
   gameOver: boolean
-  actions: Action[]
+  actions?: Action[]
+  infos: Info[]
 }
 
 interface Games {
@@ -329,10 +331,10 @@ const SocketHandler = (_: NextApiRequest, res: NextApiResponseWithSocket) => {
 
         if (!games[lobbyId] && lobby) {
           // Create new game
-          games[lobbyId] = initialiseGame(lobby.id, lobby.players, lobby.gameType, lobby.cooldown)
+          games[lobbyId] = initialiseGame(lobby.players, lobby.gameType, lobby.cooldown, lobby.id)
 
           // Start game for lobby
-          io.emit('startGame', lobbyId)
+          io.emit('startGame', lobbyId, lobby.players.map(p => p.uuid))
 
           // Remove game lobby from lobbies
           lobbies = lobbies.filter(l => l.id != lobby.id)

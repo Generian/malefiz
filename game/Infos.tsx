@@ -1,58 +1,91 @@
-import { Dispatch, SetStateAction } from 'react';
-import { PublicPlayer } from 'src/pages';
+import { useEffect, useState } from 'react'
+import { Player } from 'src/pages'
 import styles from 'styles/Infos.module.css'
-import { GameState } from './resources/gameTypes'
+
+export type InfoType = 'ROLLED_DICE' | 'KICKED_PLAYER' | 'MOVED_BLOCK' | 'TURN' | 'GAMEOVER'
 
 export interface Info {
-  player: PublicPlayer,
-  state: GameState | 'KICK_PLAYER',
+  infoType: InfoType
+  player: Player,
   diceValue?: number
-  kickedPlayer?: PublicPlayer
+  kickedPlayer?: Player
 }
 
 interface InfosProps {
   infos: Info[], 
-  setInfos: Dispatch<SetStateAction<Info[]>>
 }
 
 const renderAction = (i: Info) => {
-  switch (i.state) {
-    case 'SELECT_PIECE':
+  switch (i.infoType) {
+
+    case 'ROLLED_DICE':
       return <>
       <span className={`bold ${i.player.color}`}>{i.player.username}</span>
-      {` rolled `}
-      <span className={`bold`}>{i?.diceValue}</span>
+      {` rolled a `}
+      <span className={`bold`}>{i.diceValue}</span>
     </>
 
-    case 'MOVE_BLOCK':
+    case 'KICKED_PLAYER':
       return <>
       <span className={`bold ${i.player.color}`}>{i.player.username}</span>
-      {` gets to move a `}
+      {` kicked `}
+      <span className={`bold ${i.kickedPlayer?.color}`}>{i.kickedPlayer?.username}</span>
+    </>
+
+    case 'MOVED_BLOCK':
+      return <>
+      <span className={`bold ${i.player.color}`}>{i.player.username}</span>
+      {` moved a `}
       <span className={`bold`}>blocker</span>
     </>
 
-    case 'END':
-      return <>{' won the game!'}</>
+    case 'TURN':
+      return <>
+      <span className={`bold ${i.player.color}`}>{i.player.username}</span>
+      {`'s turn`}
+    </>
+
+    case 'GAMEOVER':
+      return <>
+        <span className={`bold ${i.player.color}`}>{i.player.username}</span>
+        <span className={`bold`}> won the game!</span>
+      </>
   
     default:
       return <span></span>
   }
 }
 
-export const Infos = ({ infos, setInfos }: InfosProps) => {
-  const infosToRender = [...infos, {}] as Info[]
+export const Infos = ({ infos }: InfosProps) => {
+  const [infosFiltered, setInfosFiltered] = useState([...infos] as Info[])
+
+  useEffect(() => {
+    const lastInfo = infos[infos.length - 1]
+    const secondLastInfo = infos[infos.length - 2]
+    const lastFilteredInfo = infosFiltered[infosFiltered.length - 1]
+    if (lastInfo && secondLastInfo && lastFilteredInfo && lastInfo.infoType == 'TURN' && secondLastInfo.infoType != lastFilteredInfo.infoType) {
+      setInfosFiltered([...infos.slice(0, infos.length - 1)])
+      setTimeout(() => {
+        setInfosFiltered([...infos])
+      }, 500)
+    } else {
+      setInfosFiltered([...infos])
+    }
+  }, [infos])
+
+  const infosToRender = [...infosFiltered, {}] as Info[]
 
   return (
     <div className={styles.container}>
       {infosToRender.map((i, index) => {
-        if (!(index < infos.length - 4)) {
-          if (i.state) {
-            const phaseOut = ((infos.indexOf(i) == infos.length - 4) && (infos.length >= 4))
+        if (!(index < infosFiltered.length - 4)) {
+          if (i.infoType) {
+            const phaseOut = ((infosFiltered.indexOf(i) == infosFiltered.length - 4) && (infosFiltered.length >= 4))
             return <div 
             key={`info_${index}`}
             style={{ 
-              top: (infos.length - index) * 25,
-              opacity: 1 - (infos.length - index) * 0.25
+              top: (infosFiltered.length - index) * 25,
+              opacity: infosFiltered.length - index == 4 ? 0 : 1 - (infosFiltered.length - index) * 0.1
             }}
             className={`${styles.infoContainer} ${phaseOut ? styles.phaseOut : styles.phaseIn}`}
             >

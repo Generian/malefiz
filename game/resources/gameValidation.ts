@@ -66,9 +66,21 @@ export const validateGameUpdate = ({ game, color, action }: GameUpdate) => {
         case 'ROLL_DICE':
           newPlayer.diceValue = action.diceValue
           newPlayer.gameState = 'MOVE_PIECE'
+          newGame.infos = [...newGame.infos, {
+            infoType: 'ROLLED_DICE',
+            player: newPlayer,
+            diceValue: action.diceValue
+          }]
+          isValid = true
           break
 
         case 'MOVE_PIECE':
+          // Check if piece still in position
+          if (!game.pieces.find(p => p.pos == action.activePiece.pos && p.color == action.activePiece.color)) {
+            reason = "Piece no longer in given position."
+            break
+          }
+
           const moveOptions = getAvailableMovePaths(action.activePiece.pos, newPlayer.color, newPlayer.diceValue, game.blocks, game.pieces).map(p => p[p.length - 1])
 
           // Filter out pieces of other players to check kick possibility:
@@ -84,18 +96,36 @@ export const validateGameUpdate = ({ game, color, action }: GameUpdate) => {
             } else if (otherPlayerPieces.map(p => p.pos).includes(action.newPositionId)) {
               const pieceToReset = otherPlayerPieces.filter(o => o.pos == action.newPositionId)[0]
               newGame.pieces = getNewPiecePositions(pieceToReset, getResetPiecePosition(pieceToReset, game.pieces), newGame.pieces)
+              newGame.infos = [...newGame.infos, {
+                infoType: 'KICKED_PLAYER',
+                player: newPlayer,
+                kickedPlayer: game.players.find(p => p.color == pieceToReset.color)
+              }]
             }
 
-            if (newPlayer.diceValue != 6 && newPlayer.gameState != 'MOVE_BLOCK') {
-              newGame.activePlayerColor = nextPlayerColor(game.activePlayerColor, game.players.map(p => p.color))
+            if (newPlayer.diceValue != 6 && newPlayer.gameState != 'MOVE_BLOCK' && newGame.gameType == 'NORMAL') {
+              const nextColor = nextPlayerColor(game.activePlayerColor, game.players.map(p => p.color))
+              newGame.activePlayerColor = nextColor
+              newGame.infos = [...newGame.infos, {
+                infoType: 'TURN',
+                player: newGame.players.filter(p => p.color == nextColor)[0]
+              }]
             }
 
             if (action.newPositionId == winningPosId) {
               newGame.gameOver = true
+              newGame.infos = [...newGame.infos, {
+                infoType: 'GAMEOVER',
+                player: newPlayer
+              }]
             }
+
+            isValid = true
+
           } else {
             reason = "Piece can't be moved. Not a valid move option."
           }
+          break
 
         case 'MOVE_BLOCK':
           const blockMoveOptions = positions
@@ -105,17 +135,31 @@ export const validateGameUpdate = ({ game, color, action }: GameUpdate) => {
             .filter(p => !game.pieces.map(p => p.pos).includes(p)) // Filter out positions with players
 
           if (blockMoveOptions.includes(action.newPositionId)) {
+            newGame.blocks = [...newGame.blocks, action.newPositionId]
+            newPlayer.gameState = 'ROLL_DICE'
+            newGame.infos = [...newGame.infos, {
+              infoType: 'MOVED_BLOCK',
+              player: newPlayer
+            }]
+
             if (player?.diceValue != 6) {
-              newGame.blocks = [...newGame.blocks, action.newPositionId]
               newGame.activePlayerColor = nextPlayerColor(game.activePlayerColor, game.players.map(p => p.color))
-              newPlayer.gameState = 'ROLL_DICE'
+              newGame.infos = [...newGame.infos, {
+                infoType: 'TURN',
+                player: newGame.players.filter(p => p.color == newGame.activePlayerColor)[0]
+              }]
+              console.log("check")
             }
+
+            isValid = true
+
           } else {
             reason = "Can't move block to selected position."
           }
+          break
       
         default:
-          reason = "Update type not supported."
+          reason = `Update type not supported: ${action}`
           break
       }
     }
@@ -124,16 +168,16 @@ export const validateGameUpdate = ({ game, color, action }: GameUpdate) => {
     reason = "No player to execute turn could be identified."
   }
 
-  if (isValid) {
+  if (isValid && newGame.actions) {
     newGame.actions = [...newGame.actions, action]
   }
 
   return { isValid, reason, newGame }
 }
 
-export const initialiseGame = (lobbyId: string, players: Player[], gameType: GameType, cooldown: number): Game => {
+export const initialiseGame = (players: Player[], gameType: GameType, cooldown: number, lobbyId?: string): Game => {
   const game = {
-    lobbyId: lobbyId,
+    lobbyId: lobbyId ? lobbyId : '',
     gameType: gameType,
     players: players.map(p => {
       return {
@@ -147,7 +191,8 @@ export const initialiseGame = (lobbyId: string, players: Player[], gameType: Gam
     pieces: initialisePieces(players.map(c => c.color)),    
     cooldown: cooldown,
     gameOver: false,
-    actions: []
+    actions: [],
+    infos: []
   }
   return game
 }

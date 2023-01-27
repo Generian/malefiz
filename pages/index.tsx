@@ -75,8 +75,8 @@ export default function Home() {
       games && setGames(games)
     })
 
-    socket.on('startGame', (lobbyId) => {
-      if (!!lobbies.find(l => l.id == lobbyId)?.players.find(p => p.uuid == getUuid())) {
+    socket.on('startGame', (lobbyId, uuids) => {
+      if (uuids.includes(getUuid())) {
         router.push(`/play?lid=${lobbyId}`)
       }
     })
