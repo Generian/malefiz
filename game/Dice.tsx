@@ -3,6 +3,8 @@ import Dice from 'react-dice-roll'
 import styles from 'styles/Dice.module.css'
 import ArrowUpwardRoundedIcon from '@mui/icons-material/ArrowUpwardRounded'
 import { PlayerColor } from './resources/playerColors'
+import useSound from 'use-sound'
+// import diceSound from 'src/public/dice.mp3'
 
 interface DiceProps {
   diceValue: number | undefined
@@ -30,6 +32,7 @@ export const DiceRoller = ({
   nextMoveTime 
 }:DiceProps) => {
   const [countdown, setCountdown] = useState<number | null>(null)
+  // const [play] = useSound(diceSound)
 
   useEffect(() => {
     if (nextMoveTime) {
@@ -64,9 +67,14 @@ export const DiceRoller = ({
       </div>}
     </div>
   } else if (showDice) {
-    return <div className={styles.container}>
+    return <div className={styles.container} onClick={() => {
+      }}>
       <Dice
-        onRoll={value => setDiceValue(value)}
+        onRoll={value => {
+          setDiceValue(value)
+          // console.log("play sound!")
+          // play()
+        }}
         size={80}
         triggers={enableDice ? ['click', 'Enter'] : []}
       />

@@ -11,7 +11,7 @@ import { BlockMarker } from './BlockMarker'
 import { useEffect, useState } from 'react'
 import { Info } from './Infos'
 import { WinnerInfo } from './WinnerInfo'
-
+import { isMobile } from 'react-device-detect'
 
 interface BoardProps {
   pieces: Piece[]
@@ -62,8 +62,8 @@ export const Board = ({
       className={`${styles.container} background`}
       style={{ minWidth: boardSize, minHeight: boardSize }}
     >
-      {showBlockerCursor && !isGameOver && <BlockMarker pieceSize={pieceSize} cursor={mousePos}/>}
-      {activePiece && !isGameOver && <PieceMarker 
+      {showBlockerCursor && !isGameOver && !isMobile && <BlockMarker pieceSize={pieceSize} cursor={mousePos}/>}
+      {activePiece && !isGameOver && !isMobile && <PieceMarker 
           piece={activePiece}
           cursor={mousePos}
           pieceSize={pieceSize}

@@ -49,6 +49,7 @@ export const Position = ({ id, blocked, children, highlightMovePosition, handleC
         position: "absolute"
       }}
       onClick={() => handleClick(id)}
+      // onMouseUp={() => handleClick(id)}
     >
       <div
         className={`${styles.default} ${highlightMovePosition ?styles.highlightMovePosition : ''} ${position.color ? styles[position.color] : ''} ${!!position.type ? styles[position.type] : ''}`}
