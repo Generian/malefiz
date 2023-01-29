@@ -1,8 +1,10 @@
 .default {
-  background-color: violet;
   box-sizing: border-box;
-  box-shadow: rgba(0, 0, 0, 0.4) 0px 2px 4px, rgba(0, 0, 0, 0.3) 0px 7px 13px -3px, rgba(0, 0, 0, 0.2) 0px -3px 0px inset;
-  border: 2px solid var(--positionsColor);
+  /* box-shadow: rgba(0, 0, 0, 0.4) 0px 2px 4px, rgba(0, 0, 0, 0.3) 0px 7px 13px -3px, rgba(0, 0, 0, 0.2) 0px -3px 0px inset;
+  border: 2px solid var(--positionsColor); */
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
 .RED {
@@ -19,4 +21,9 @@
 
 .BLUE {
   background-color: var(--blue);
+}
+
+.piece {
+  /* -webkit-filter: drop-shadow(5px 5px 5px var(--black));
+  filter: drop-shadow(5px 5px 5px var(--black)); */
 }

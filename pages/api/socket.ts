@@ -80,6 +80,20 @@ const SocketHandler = (_: NextApiRequest, res: NextApiResponseWithSocket) => {
       return
     }
 
+    const removeLobbyWhenAllPlayersOffline = (l: Lobby) => {
+      let keepLobby = false
+
+      l.players.forEach(p => {
+        if (p.online) {
+          keepLobby = true
+        }
+      })
+
+      if (!keepLobby) {
+        lobbies = lobbies.filter(lobby => lobby.id != l.id)
+      }
+    }
+
     const getNewLobbyUsername = (uuid: string, lobbyId?: string) => {
       let newLobbyUsername = users[uuid]?.globalUsername
       if (!newLobbyUsername) {
@@ -133,11 +147,14 @@ const SocketHandler = (_: NextApiRequest, res: NextApiResponseWithSocket) => {
       users[uuid].online = isOnline
 
       // Update lobbies
-      lobbies.forEach((l, lobbyIndex) => l.players.forEach((p, playerIndex) => {
-        if (p.uuid == uuid) {
-          lobbies[lobbyIndex].players[playerIndex].online = isOnline
-        }
-      }))
+      lobbies.forEach((l, lobbyIndex) => {
+        l.players.forEach((p, playerIndex) => {
+          if (p.uuid == uuid) {
+            lobbies[lobbyIndex].players[playerIndex].online = isOnline
+          }
+        })
+        removeLobbyWhenAllPlayersOffline(l)
+      })
 
       // Update games
       Object.entries(games).forEach(entry => {
@@ -276,6 +293,8 @@ const SocketHandler = (_: NextApiRequest, res: NextApiResponseWithSocket) => {
             updateLobbyInLobbies(newLobby)
           }
 
+          removeLobbyWhenAllPlayersOffline(newLobby)
+
           io.emit('updateLobbies', lobbies)
         }
       })
@@ -319,8 +338,12 @@ const SocketHandler = (_: NextApiRequest, res: NextApiResponseWithSocket) => {
         }
       })
 
-      socket.on('startGame', (lobbyId: string, uuid: string) => {
-        const lobby = getLobbyById(lobbyId)
+      socket.on('startGame', (lobbyId: string, uuid: string, restart: boolean | undefined) => {
+        let lobby: Lobby | Game | undefined = getLobbyById(lobbyId)
+
+        if (restart) {
+          lobby = games[lobbyId]
+        }
 
         const isPlayerInLobby = !!lobby?.players.find(p => p.uuid == uuid)
 
@@ -329,18 +352,22 @@ const SocketHandler = (_: NextApiRequest, res: NextApiResponseWithSocket) => {
           return
         }
 
-        if (!games[lobbyId] && lobby) {
+        if (lobby) {
           // Create new game
-          games[lobbyId] = initialiseGame(lobby.players, lobby.gameType, lobby.cooldown, lobby.id)
+          games[lobbyId] = initialiseGame(lobby.players, lobby.gameType, lobby.cooldown, lobbyId)
 
-          // Start game for lobby
-          io.emit('startGame', lobbyId, lobby.players.map(p => p.uuid))
+          if (restart) {
+            io.emit('receiveGameUpdate', games[lobbyId])
+          } else {
+            // Start game for lobby
+            io.emit('startGame', lobbyId, lobby.players.map(p => p.uuid))
 
-          // Remove game lobby from lobbies
-          lobbies = lobbies.filter(l => l.id != lobby.id)
+            // Remove game lobby from lobbies
+            lobbies = lobbies.filter(l => l.id != lobbyId)
 
-          // Update all other lobbies
-          socket.broadcast.emit('updateLobbies', lobbies)
+            // Update all other lobbies
+            socket.broadcast.emit('updateLobbies', lobbies)
+          }
         }
       })
 

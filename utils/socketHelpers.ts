@@ -19,7 +19,7 @@ export interface ClientToServerEvents {
   changeLobbySettings: (uuid: string, lobbyId: string, gameType: GameType, cooldown: number) => void
   joinLobby: (lobbyId: string, color: PlayerColor, uuid: string) => void
   leaveLobby: (lobbyId: string, uuid: string) => void
-  startGame: (lobbyId: string, uuid: string) => void
+  startGame: (lobbyId: string, uuid: string, restart?: boolean) => void
   updateUsername: (userName: string, uuid: string, lobbyId?: string) => void
   changePlayerColor: (lobbyId: string, color: PlayerColor | undefined, uuid: string) => void
   getGameValidityAndColors: (lobbyId: string, uuid: string) => void

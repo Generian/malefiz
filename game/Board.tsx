@@ -9,6 +9,8 @@ import { useWindowSize } from 'src/utils/windowSize'
 import { getSquareSize } from 'src/components/Layout'
 import { BlockMarker } from './BlockMarker'
 import { useEffect, useState } from 'react'
+import { Info } from './Infos'
+import { WinnerInfo } from './WinnerInfo'
 
 
 interface BoardProps {
@@ -17,6 +19,7 @@ interface BoardProps {
   blocks: number[]
   showBlockerCursor: boolean
   activePiece?: Piece
+  isGameOver: Info | undefined
   handleClick: (posId: number) => void
   handlePieceClick: (piece: Piece) => void
 }
@@ -27,6 +30,7 @@ export const Board = ({
   blocks,
   showBlockerCursor,
   activePiece,
+  isGameOver,
   handleClick,
   handlePieceClick
 }: BoardProps) => {
@@ -58,8 +62,8 @@ export const Board = ({
       className={`${styles.container} background`}
       style={{ minWidth: boardSize, minHeight: boardSize }}
     >
-      {showBlockerCursor && <BlockMarker pieceSize={pieceSize} cursor={mousePos}/>}
-      {activePiece && <PieceMarker 
+      {showBlockerCursor && !isGameOver && <BlockMarker pieceSize={pieceSize} cursor={mousePos}/>}
+      {activePiece && !isGameOver && <PieceMarker 
           piece={activePiece}
           cursor={mousePos}
           pieceSize={pieceSize}
@@ -89,6 +93,7 @@ export const Board = ({
           />)
         }
       </Position>)}
+      {isGameOver && <WinnerInfo info={isGameOver}/>}
     </div>
   )
 }

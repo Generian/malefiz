@@ -300,6 +300,7 @@ export const GameComp = () => {
               blocks={blocks}
               showBlockerCursor={getActivePlayer()?.gameState == 'MOVE_BLOCK'}
               activePiece={activePiece}
+              isGameOver={infos.find(i => i.infoType == 'GAMEOVER')}
               handleClick={handleClick}
               handlePieceClick={playerSelectedPiece}
             />
@@ -314,6 +315,10 @@ export const GameComp = () => {
                 activePlayerColor={getActivePlayer()?.color}
                 nextMoveTime={getActivePlayer()?.nextMoveTime}
               />}
+              {isGameOver && <div className={styles.buttonContainer}>
+                <button className={`button primary`} onClick={() => typeof lid == 'string' && socket.emit('startGame', lid, getUuid(), true)}>Play again</button>
+                <button className={`button`} onClick={() => router.push('/')}>Back to Lobby</button>
+              </div>}
               <div className={styles.bottomInfoContainer}>
                 <Infos infos={infos}/>
                 {!!lid && <PlayerOnlineState players={players} />}
