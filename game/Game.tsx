@@ -17,7 +17,7 @@ import { PlayerOnlineState } from './PlayerOnlineState'
 import { Action, initialiseGame, validateGameUpdate } from './resources/gameValidation'
 import { Game } from 'src/pages/api/socket'
 import useSound from 'use-sound'
-import moveSound from 'src/public/sounds/move.mp3'
+// import moveSound from 'src/public/sounds/move.mp3'
 
 
 export const debugMode = false
@@ -39,7 +39,7 @@ const didPieceMove = (n: Piece[], o: Piece[]) => {
 
 export const GameComp = () => {
   const router = useRouter()
-  const [play] = useSound(moveSound)
+  // const [play] = useSound(moveSound)
   const { lid, r, g, y, b } = router.query
 
   // Generic states
@@ -65,7 +65,7 @@ export const GameComp = () => {
     setPieces(pieces => {
       // Play move sound
       if (pieces && didPieceMove(newGame.pieces, pieces)) {
-        play()
+        // play()
       }
       return newGame.pieces
     })
