@@ -3,6 +3,8 @@ import { BlockMarker } from './BlockMarker'
 import { debugMode } from './Game'
 import { Pos, positions } from './resources/positions'
 import { BORDER, REM } from './resources/styles'
+import { isMobile } from 'react-device-detect'
+import { Piece } from './resources/gameTypes'
 
 interface PositionProps {
   id: number,
@@ -13,6 +15,7 @@ interface PositionProps {
   spacing: number
   positionSize: number
   pieceSize: number
+  activePiece?: Piece
 }
 
 export const getPosition = (x: number, y: number, spacing: number, positionSize: number, type: 'POSITION' | 'BORDER' | 'CENTER' = 'POSITION', height: number = 0) => {
@@ -37,9 +40,11 @@ export const getPosition = (x: number, y: number, spacing: number, positionSize:
   }
 }
 
-export const Position = ({ id, blocked, children, highlightMovePosition, handleClick, spacing, positionSize, pieceSize }: PositionProps) => {
+export const Position = ({ id, blocked, children, highlightMovePosition, handleClick, spacing, positionSize, pieceSize, activePiece }: PositionProps) => {
   const position: Pos = positions.find(p => p.id == id) as Pos
   const coords = getPosition(position.x, position.y, spacing, positionSize)
+
+  console.log()
 
   return (
     <div 
@@ -49,14 +54,17 @@ export const Position = ({ id, blocked, children, highlightMovePosition, handleC
         position: "absolute"
       }}
       onClick={() => handleClick(id)}
-      // onMouseUp={() => handleClick(id)}
+      // onMouseUp={(isMobile && activePiece?.pos != id) ? () => {} : () => {
+      //   console.log("Check:", activePiece?.pos, id, isMobile)
+      //   handleClick(id)}}
     >
       <div
         className={`${styles.default} ${highlightMovePosition ?styles.highlightMovePosition : ''} ${position.color ? styles[position.color] : ''} ${!!position.type ? styles[position.type] : ''}`}
         style={{ 
           width: positionSize, 
           height:positionSize, 
-          borderRadius: positionSize/2
+          borderRadius: positionSize/2,
+          borderWidth: isMobile ? '0.15rem' : '0.25rem'
         }}
       >
         {children}

@@ -81,10 +81,11 @@ export const Board = ({
         spacing={spacing}
         positionSize={positionSize}
         pieceSize={pieceSize}
+        activePiece={activePiece}
       >
         {pieces
           .filter(piece => piece.pos == pos.id)
-          .filter(piece => piece.pos != activePiece?.pos)
+          .filter(piece => isMobile ? true : piece.pos != activePiece?.pos)
           .map((piece, i) => <PieceMarker 
             key={i}
             piece={piece}

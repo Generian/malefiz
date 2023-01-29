@@ -16,13 +16,30 @@ import { Info, Infos } from './Infos'
 import { PlayerOnlineState } from './PlayerOnlineState'
 import { Action, initialiseGame, validateGameUpdate } from './resources/gameValidation'
 import { Game } from 'src/pages/api/socket'
+import useSound from 'use-sound'
+import moveSound from 'src/public/sounds/move.mp3'
+
 
 export const debugMode = false
 
 let socket: Socket<ServerToClientEvents, ClientToServerEvents>
 
+const didPieceMove = (n: Piece[], o: Piece[]) => {
+  let moved = false
+
+  n.forEach(p => {
+    if (!o.find(piece => p.pos == piece.pos && p.color == piece.color)) {
+      moved = true
+      console.log("play sound")
+    }
+  })
+
+  return moved
+}
+
 export const GameComp = () => {
   const router = useRouter()
+  const [play] = useSound(moveSound)
   const { lid, r, g, y, b } = router.query
 
   // Generic states
@@ -45,13 +62,17 @@ export const GameComp = () => {
     // Set game details
     setGameType(newGame.gameType)
     setPlayers(newGame.players)
-    setPieces(newGame.pieces)
+    setPieces(pieces => {
+      // Play move sound
+      if (pieces && didPieceMove(newGame.pieces, pieces)) {
+        play()
+      }
+      return newGame.pieces
+    })
     setBlocks(newGame.blocks)
     setActivePlayerColor(newGame.activePlayerColor)
     setInfos(newGame.infos)
     setIsGameOver(newGame.gameOver)
-
-    console.log("check:", newGame.pieces.find(p => p.pos == activePiece?.pos && p.color == activePiece?.color), activePiece)
 
     if (activePiece && !newGame.pieces.find(p => p.pos == activePiece.pos && p.color == activePiece.color)) {
       console.log("Resetting active piece")
@@ -243,7 +264,11 @@ export const GameComp = () => {
     }
 
     validateActionAndUpdate(action)
-    activePiece && setActivePiece(undefined)
+
+    if (activePiece) {
+      setActivePiece(undefined)
+      // play()
+    }
   }
 
   const moveBlock = (posId: number) => {
@@ -253,7 +278,7 @@ export const GameComp = () => {
       updateType: 'MOVE_BLOCK',
       newPositionId: posId
     }
-
+    // play()
     validateActionAndUpdate(action)
   }
 

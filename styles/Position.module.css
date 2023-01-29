@@ -29,12 +29,6 @@
   cursor: pointer;
 }
 
-@media only screen and (max-width: 600px) {
-  .highlightMovePosition {
-    border: 0.1rem dashed var(--gray3);
-  }
-}
-
 .BLOCK_MARKER {
   background-color: var(--blockMarkerColor);
 }

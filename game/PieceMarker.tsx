@@ -5,6 +5,7 @@ import green_piece from 'src/public/green_piece_2.png'
 import yellow_piece from 'src/public/yellow_piece_2.png'
 import blue_piece from 'src/public/blue_piece_2.png'
 import Image from 'next/image'
+import { isMobile } from 'react-device-detect'
 
 const pieceMapping = {
   "RED": red_piece,
@@ -24,6 +25,9 @@ interface PieceMarker {
 }
 
 export const PieceMarker = ({ piece, pieceSize, cursor, handleClick }: PieceMarker) => {
+
+  const clickHandler = handleClick ? () => handleClick(piece) : () => {}
+
   return (
     <div 
       className={`${styles.default}`} //${styles[piece.color]}
@@ -37,7 +41,8 @@ export const PieceMarker = ({ piece, pieceSize, cursor, handleClick }: PieceMark
         pointerEvents: cursor ? 'none' : 'all',
         zIndex: cursor ? 4 : ''
       }}
-      onClick={handleClick ? () => handleClick(piece) : () => {}}
+      onClick={clickHandler}
+      // onMouseDown={isMobile ? () => {} : clickHandler}
     >
       <Image 
         src={pieceMapping[piece.color]} 
