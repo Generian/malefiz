@@ -15,7 +15,6 @@ export type Action = UPDATE_ROLL_DICE | UPDATE_MOVE_PIECE | UPDATE_MOVE_BLOCK
 
 interface UPDATE_ROLL_DICE {
   updateType: 'ROLL_DICE'
-  diceValue: number
 }
 
 interface UPDATE_MOVE_PIECE {
@@ -30,10 +29,10 @@ interface UPDATE_MOVE_BLOCK {
 }
 
 const updatePlayers = (game: Game, newPlayer: Player) => {
-  let newPlayers = game.players
+  let newPlayers = [...game.players]
   const index = newPlayers.indexOf(newPlayers.filter(p => p.color == newPlayer.color)[0])
   newPlayers.splice(index, 1, newPlayer)
-  let newGame = game
+  let newGame = {...game}
   newGame.players = newPlayers
   return newGame
 }
@@ -42,13 +41,17 @@ const nextMoveTime = (game: Game) => {
  return new Date().getTime() + game.cooldown * 1000
 }
 
+const generateDiceValue = () => {
+  return Math.floor(Math.random() * 6) + 1
+}
+
 export const validateGameUpdate = ({ game, color, action }: GameUpdate) => {
   const player = game.players.find(p => p.color == color)
   
   let isValid = false
   let reason = ''
   let newGame = {...game}
-  let newPlayer = player
+  let newPlayer = player ? {...player} : undefined
   let itsPlayersTurn = false
 
   if (!game.gameOver) {
@@ -66,15 +69,17 @@ export const validateGameUpdate = ({ game, color, action }: GameUpdate) => {
     if (!!newPlayer) {
       if (!itsPlayersTurn) {
         reason = "Not player's turn."
+        console.log("reason", action, player)
       } else {
         switch (action.updateType) {
           case 'ROLL_DICE':
-            newPlayer.diceValue = action.diceValue
+            const diceValue = generateDiceValue()
+            newPlayer.diceValue = diceValue
             newPlayer.gameState = 'MOVE_PIECE'
             newGame.infos = [...newGame.infos, {
               infoType: 'ROLLED_DICE',
               player: newPlayer,
-              diceValue: action.diceValue
+              diceValue: diceValue
             }]
             isValid = true
             break
@@ -203,7 +208,7 @@ export const validateGameUpdate = ({ game, color, action }: GameUpdate) => {
             break
         }
       }
-      updatePlayers(newGame, newPlayer)
+      newGame = updatePlayers(newGame, newPlayer)
     } else {
       reason = "No player to execute turn could be identified."
     }

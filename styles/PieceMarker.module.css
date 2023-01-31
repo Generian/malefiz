@@ -27,3 +27,20 @@
   /* -webkit-filter: drop-shadow(5px 5px 5px var(--black));
   filter: drop-shadow(5px 5px 5px var(--black)); */
 }
+
+.pending {
+  animation: pulsate .5s ease-out;
+  animation-iteration-count: infinite;
+}
+
+@keyframes pulsate {
+  0% {
+    opacity: 0.3;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0.3;
+  }
+}

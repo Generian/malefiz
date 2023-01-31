@@ -11,6 +11,8 @@ interface PositionProps {
   children?: any,
   highlightMovePosition: boolean,
   blocked: boolean
+  tempBlock: boolean
+  pendingMove: boolean
   handleClick: (posId: number) => void
   spacing: number
   positionSize: number
@@ -40,7 +42,7 @@ export const getPosition = (x: number, y: number, spacing: number, positionSize:
   }
 }
 
-export const Position = ({ id, blocked, children, highlightMovePosition, handleClick, spacing, positionSize, pieceSize, activePiece }: PositionProps) => {
+export const Position = ({ id, blocked, tempBlock, pendingMove, children, highlightMovePosition, handleClick, spacing, positionSize, pieceSize, activePiece }: PositionProps) => {
   const position: Pos = positions.find(p => p.id == id) as Pos
   const coords = getPosition(position.x, position.y, spacing, positionSize)
 
@@ -64,11 +66,13 @@ export const Position = ({ id, blocked, children, highlightMovePosition, handleC
           width: positionSize, 
           height:positionSize, 
           borderRadius: positionSize/2,
-          borderWidth: isMobile ? '0.15rem' : '0.25rem'
+          borderWidth: isMobile ? '0.15rem' : '0.25rem',
+          cursor: pendingMove ? 'default' : 'pointer'
         }}
       >
         {children}
         {blocked && <BlockMarker pieceSize={pieceSize}/>}
+        {tempBlock && !blocked && <BlockMarker pieceSize={pieceSize} pending={true}/>}
         {debugMode && <div>
           <p>{position.id}</p>
           <p>{position.connections}</p>

@@ -1,80 +1,66 @@
-import React, { useEffect, useState } from 'react'
-import Dice from 'react-dice-roll'
+import { useEffect, useState } from 'react';
 import styles from 'styles/Dice.module.css'
-import ArrowUpwardRoundedIcon from '@mui/icons-material/ArrowUpwardRounded'
-import { PlayerColor } from './resources/playerColors'
-import useSound from 'use-sound'
+
+const sides = [1, 2, 3, 4, 5, 6]
+
+const changeSide = (side: number) => {
+  const s = sides.filter(s => s != side)
+  return s[Math.floor(Math.random() * s.length)]
+}
+
+const Dot = ({ number, arr }: {number: number, arr: number[]}) => {
+  return arr.includes(number) ? <div className={styles.dot}/> : <></>
+}
+
+const DiceSide = ({ number }: {number: number}) => {
+  return (
+    <div className={styles.gridContainer}>
+      <div className={styles.gridItem}><Dot number={number} arr={[4, 5, 6]}/></div>
+      <div className={styles.gridItem}></div>
+      <div className={styles.gridItem}><Dot number={number} arr={[2, 3, 4, 5, 6]}/></div>
+      <div className={styles.gridItem}><Dot number={number} arr={[6]}/></div>
+      <div className={styles.gridItem}><Dot number={number} arr={[1, 3, 5]}/></div>
+      <div className={styles.gridItem}><Dot number={number} arr={[6]}/></div>
+      <div className={styles.gridItem}><Dot number={number} arr={[2, 3, 4, 5, 6]}/></div>
+      <div className={styles.gridItem}></div>
+      <div className={styles.gridItem}><Dot number={number} arr={[4, 5, 6]}/></div>
+    </div>
+  )
+}
 
 interface DiceProps {
-  diceValue: number | undefined
-  setDiceValue: (value: number, playerId?: number) => void,
-  enableDice: boolean
-  showDice: boolean
-  activePlayerColor: PlayerColor | undefined
-  nextMoveTime?: EpochTimeStamp
+  value: number | undefined
+  disabled: boolean
+  onClick: () => void
 }
 
-type DiceValue = 2 | 1 | 3 | 4 | 5 | 6 | undefined
-
-const formatCountdown = (c: number) => {
-  const seconds = Math.floor(c / 1000.0)
-  const milliseconds = c - 1000 * seconds
-  return `${seconds}:${Number(String(milliseconds).slice(0, 2)).toLocaleString('en-US', {minimumIntegerDigits: 2, useGrouping:false})}`
-}
-
-export const DiceRoller = ({ 
-  diceValue, 
-  setDiceValue, 
-  enableDice, 
-  showDice, 
-  activePlayerColor,
-  nextMoveTime 
-}:DiceProps) => {
-  const [countdown, setCountdown] = useState<number | null>(null)
+export const Dice = ({ value, disabled, onClick }: DiceProps) => {
+  const [side, setSide] = useState(value ? value : sides[0])
 
   useEffect(() => {
-    if (nextMoveTime) {
-      let timer = setInterval(() => {
-        const d = new Date(nextMoveTime)
-        const newCountdown = nextMoveTime - new Date().getTime()
-        if (newCountdown > 0) {
-          setCountdown(newCountdown)
-        } else {
-          setCountdown(null)
-          clearTimeout(timer)
-        }
-      }, 70)
+    let roller: NodeJS.Timer | undefined = undefined
+    if (!value) {
+      roller = setInterval(() => {
+        setSide(side => changeSide(side))
+      }, 200)
+    } else {
+      if (roller) {
+        clearInterval(roller)
+      }
+      setSide(value)
     }
-  }, [nextMoveTime])
+    return () => clearInterval(roller)
+  }, [value])
 
-  const playerToRollDice = enableDice && showDice && nextMoveTime && (nextMoveTime <= new Date().getTime()) && !countdown
-
-  if (nextMoveTime) {
-    return <div className={styles.container}>
-      <Dice
-        onRoll={value => setDiceValue(value)}
-        size={80}
-        sound={'/sounds/dice.mp3'}
-        triggers={playerToRollDice ? ['click', 'Enter'] : []}
-      />
-      {<div className={`${styles.diceHider} ${(((nextMoveTime > new Date().getTime()) && countdown) || !showDice) ? styles.hide : ''}`}>
-        <span className={`${styles.countdown} ${countdown && countdown < 2000 ? styles.imminent : ''}`}>{countdown && formatCountdown(countdown)}</span>
-      </div>}
-      {playerToRollDice && <div className={`${styles.CTA} ${styles.bounce}`}>
-        <ArrowUpwardRoundedIcon/>
-        <span className={`${styles.CTA_text} ${activePlayerColor}`}>ROLL DICE!</span>
-      </div>}
+  return (
+  <div className={`${styles.cubeScene} ${disabled ? styles.disabled : ''}`} onClick={onClick}>
+    <div className={`${styles.cube} ${styles[`show-${side}`]}`}>
+      <div className={`${styles.cube__face} ${styles.cube__face__1}`}><DiceSide number={1}/></div>
+      <div className={`${styles.cube__face} ${styles.cube__face__6}`}><DiceSide number={6}/></div>
+      <div className={`${styles.cube__face} ${styles.cube__face__2}`}><DiceSide number={2}/></div>
+      <div className={`${styles.cube__face} ${styles.cube__face__5}`}><DiceSide number={5}/></div>
+      <div className={`${styles.cube__face} ${styles.cube__face__3}`}><DiceSide number={3}/></div>
+      <div className={`${styles.cube__face} ${styles.cube__face__4}`}><DiceSide number={4}/></div>
     </div>
-  } else if (showDice) {
-    return <div className={styles.container} onClick={() => {
-      }}>
-      <Dice
-        onRoll={value => setDiceValue(value)}
-        size={80}
-        triggers={enableDice ? ['click', 'Enter'] : []}
-      />
-    </div>
-  } else {
-    return <>{diceValue}</>
-  }
+  </div>)
 }

@@ -19,6 +19,8 @@ interface BoardProps {
   blocks: number[]
   showBlockerCursor: boolean
   activePiece?: Piece
+  tempPiece?: Piece
+  tempBlock?: number
   isGameOver: Info | undefined
   handleClick: (posId: number) => void
   handlePieceClick: (piece: Piece) => void
@@ -30,6 +32,8 @@ export const Board = ({
   blocks,
   showBlockerCursor,
   activePiece,
+  tempPiece,
+  tempBlock,
   isGameOver,
   handleClick,
   handlePieceClick
@@ -62,8 +66,8 @@ export const Board = ({
       className={`${styles.container} background`}
       style={{ minWidth: boardSize, minHeight: boardSize }}
     >
-      {showBlockerCursor && !isGameOver && !isMobile && <BlockMarker pieceSize={pieceSize} cursor={mousePos}/>}
-      {activePiece && !isGameOver && !isMobile && <PieceMarker 
+      {(showBlockerCursor || (tempPiece?.pos && blocks?.includes(tempPiece?.pos))) && !isGameOver && !isMobile && <BlockMarker pieceSize={pieceSize} cursor={mousePos}/>}
+      {activePiece && !tempPiece && !isGameOver && !isMobile && <PieceMarker 
           piece={activePiece}
           cursor={mousePos}
           pieceSize={pieceSize}
@@ -75,8 +79,10 @@ export const Board = ({
       {positions.map(pos => <Position 
         key={pos.id}
         id={pos.id}
-        blocked={blocks?.includes(pos.id)}
+        blocked={blocks?.includes(pos.id) && tempPiece?.pos != pos.id}
+        tempBlock={tempBlock == pos.id}
         highlightMovePosition={fieldsToHighlight && fieldsToHighlight.includes(pos.id)}
+        pendingMove={!!tempPiece || !!tempBlock}
         handleClick={handleClick}
         spacing={spacing}
         positionSize={positionSize}
@@ -93,6 +99,11 @@ export const Board = ({
             handleClick={handlePieceClick}
           />)
         }
+        {tempPiece && tempPiece.pos == pos.id && <PieceMarker 
+            piece={tempPiece}
+            pieceSize={pieceSize}
+            pending={true}
+        />}
       </Position>)}
       {isGameOver && <WinnerInfo info={isGameOver}/>}
     </div>

@@ -1,8 +1,11 @@
 .container {
   position: fixed;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
   top: 0;
   right: 0;
-  padding: 3rem;
 }
 
 .diceHider {
@@ -41,11 +44,7 @@
 }
 
 .CTA {
-  position: absolute;
-  /* pointer-events: none; */
-  bottom: -50px;
   width: 84px;
-  margin-right: calc(3rem - 2px);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -71,4 +70,75 @@
   57%  { transform: scale(1,1)      translateY(-7px); }
   64%  { transform: scale(1,1)      translateY(0); }
   100% { transform: scale(1,1)      translateY(0); }
+}
+
+/* Custom dice */
+
+.cubeScene {
+  width: 80px;
+  height: 80px;
+  margin: 3rem;
+  box-sizing: border-box;
+  cursor: pointer;
+  perspective: 200%;
+}
+
+.disabled {
+  pointer-events: none;
+  opacity: 0.75;
+}
+
+.cube {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  transform-style: preserve-3d;
+  transform: translateZ(-100%);
+  transition: transform 0.2s linear;
+}
+
+.cube.show-1 { transform: translateZ(-40px) rotateY(   0deg); }
+.cube.show-2 { transform: translateZ(-40px) rotateY( -90deg); }
+.cube.show-6 { transform: translateZ(-40px) rotateY(-180deg); }
+.cube.show-5 { transform: translateZ(-40px) rotateY(  90deg); }
+.cube.show-3 { transform: translateZ(-40px) rotateX( -90deg); }
+.cube.show-4 { transform: translateZ(-40px) rotateX(  90deg); }
+
+.cube__face {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  border: 2px solid var(--gray1);
+  border-radius: 10px;
+  background-color: white;
+  box-shadow: rgba(0, 0, 0, 0.24) 0px 3px 8px;
+}
+
+.cube__face__1 { transform: rotateY(  0deg) translateZ(40px); }
+.cube__face__2 { transform: rotateY( 90deg) translateZ(40px); }
+.cube__face__6 { transform: rotateY(180deg) translateZ(40px); }
+.cube__face__5 { transform: rotateY(-90deg) translateZ(40px); }
+.cube__face__3 { transform: rotateX( 90deg) translateZ(40px); }
+.cube__face__4 { transform: rotateX(-90deg) translateZ(40px); }
+
+.gridContainer {
+  width: 80%;
+  height: 80%;
+  padding: 10%;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-rows: repeat(3, minmax(0, 1fr));
+}
+
+.gridItem {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.dot {
+  width: 60%;
+  height: 60%;
+  border-radius: 100%;
+  background-color: var(--black);
 }

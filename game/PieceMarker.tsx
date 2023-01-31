@@ -21,10 +21,11 @@ interface PieceMarker {
     x: number
     y: number
   }
+  pending?: boolean
   handleClick?: (piece: Piece) => void
 }
 
-export const PieceMarker = ({ piece, pieceSize, cursor, handleClick }: PieceMarker) => {
+export const PieceMarker = ({ piece, pieceSize, cursor, pending, handleClick }: PieceMarker) => {
 
   const clickHandler = handleClick ? () => handleClick(piece) : () => {}
 
@@ -48,7 +49,7 @@ export const PieceMarker = ({ piece, pieceSize, cursor, handleClick }: PieceMark
         src={pieceMapping[piece.color]} 
         alt={`${piece.color} piece at ${piece.pos}`} 
         width={pieceSize*0.94}
-        className={styles.piece}
+        className={`${styles.piece} ${pending ? styles.pending : ''}`}
         style={{
           position: 'absolute',
           top: -pieceSize*0.7,

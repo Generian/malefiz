@@ -1,6 +1,6 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import styles from 'styles/Game.module.css'
-import { DiceRoller } from 'src/game/Dice'
+import { DiceRoller } from 'src/game/DiceRoller'
 import { Board } from './Board'
 import { activeColors, nextPlayerColor, PlayerColor } from './resources/playerColors'
 import { defaultBlocks, getResetPiecePosition, initialisePieces, positions, winningPosId } from './resources/positions'
@@ -17,6 +17,7 @@ import { PlayerOnlineState } from './PlayerOnlineState'
 import { Action, initialiseGame, validateGameUpdate } from './resources/gameValidation'
 import { Game } from 'src/pages/api/socket'
 import useSound from 'use-sound'
+import { constants } from 'buffer'
 // import moveSound from 'src/public/sounds/move.mp3'
 
 
@@ -30,7 +31,7 @@ const didPieceMove = (n: Piece[], o: Piece[]) => {
   n.forEach(p => {
     if (!o.find(piece => p.pos == piece.pos && p.color == piece.color)) {
       moved = true
-      console.log("play sound")
+      // console.log("play sound")
     }
   })
 
@@ -52,16 +53,34 @@ export const GameComp = () => {
   // Local-only data
   const [myColor, setMyColor] = useState<PlayerColor>()
   const [activePiece, setActivePiece] = useState<Piece>()
+  const [tempPiece, setTempPiece] = useState<Piece>()
+  const [tempBlock, setTempBlock] = useState<number>()
+  const [diceValue, setDiceValue] = useState<number | undefined>(2)
 
   // Auxiliary state
   const [isOnlineGame, setIsOnlineGame] = useState(!!lid)
   const [infos, setInfos] = useState<Info[]>([])
   const [isGameOver, setIsGameOver] = useState(false)
 
+  useEffect(() => {
+    const p = getActivePlayer()
+    if (p?.diceValue && p?.gameState != 'ROLL_DICE') {
+      setDiceValue(p.diceValue)
+    }
+  }, [players])
+
+  useEffect(() => {
+    document.addEventListener('keydown', handleKeyDown)
+
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown)
+    }
+  }, [myColor, activePlayerColor, lid, gameType])
+
   const updateGameStateWithNewGameData = (newGame: Game) => {
     // Set game details
     setGameType(newGame.gameType)
-    setPlayers(newGame.players)
+    setPlayers([...newGame.players])
     setPieces(pieces => {
       // Play move sound
       if (pieces && didPieceMove(newGame.pieces, pieces)) {
@@ -73,9 +92,13 @@ export const GameComp = () => {
     setActivePlayerColor(newGame.activePlayerColor)
     setInfos(newGame.infos)
     setIsGameOver(newGame.gameOver)
+    setTempPiece(temp => {
+      temp && setActivePiece(undefined)
+      return undefined
+    })
+    setTempBlock(undefined)
 
     if (activePiece && !newGame.pieces.find(p => p.pos == activePiece.pos && p.color == activePiece.color)) {
-      console.log("Resetting active piece")
       setActivePiece(undefined)
     }
   }
@@ -95,6 +118,24 @@ export const GameComp = () => {
     }
   }
 
+  const validateAction = (action: Action) => {
+    let valid = false
+
+    const game = getGameFromLocalState()
+
+    const playerColor = gameType == 'COMPETITION' ? myColor : activePlayerColor
+
+    if (game && playerColor) {
+      const { isValid } = validateGameUpdate({
+        game: game, 
+        color: playerColor, 
+        action: action
+      })
+      valid = isValid
+    }
+    return valid
+  }
+
   const validateActionAndUpdate = (action: Action) => {
     if (isOnlineGame) {
       updateServerWithGameState(action)
@@ -112,6 +153,7 @@ export const GameComp = () => {
 
         if (!isValid) {
           console.error("Move failed! Reason:", reason)
+          updateGameStateWithNewGameData(newGame)
         } else {
           console.log("Received game update (local):", newGame)
           updateGameStateWithNewGameData(newGame)
@@ -229,17 +271,24 @@ export const GameComp = () => {
   // Game interaction
   const myTurn = () => (myColor == activePlayerColor) || !lid || gameType == 'COMPETITION'
 
-  const playerRolledDice = (
-    diceValue: number,
-  ) => {
-    if (!myTurn()) return
-
+  const playerRolledDice = () => {
     const action: Action = {
       updateType: 'ROLL_DICE',
-      diceValue: diceValue
     }
 
-    validateActionAndUpdate(action)
+    if (!validateAction(action)) return
+
+    setDiceValue(undefined)
+
+    setTimeout(() => {
+      validateActionAndUpdate(action)
+    }, 1000)
+  }
+
+  const handleKeyDown = (event: { key: string }) => {
+    if (event.key === 'Enter') {
+      playerRolledDice()
+    }
   }
 
   const playerSelectedPiece = (piece: Piece) => {
@@ -255,31 +304,41 @@ export const GameComp = () => {
   }
 
   const moveActivePiece = (posId: number) => {
-    if (!myTurn()) return
-
     const action: Action = {
       updateType: 'MOVE_PIECE',
       activePiece: activePiece,
       newPositionId: posId
     }
 
+    if (!validateAction(action)) {
+      if (activePiece?.pos == posId) {
+        setActivePiece(undefined)
+      }
+      return
+    }
+
     validateActionAndUpdate(action)
 
     if (activePiece) {
-      setActivePiece(undefined)
+      gameType == 'COMPETITION' && setTempPiece({
+        ...activePiece,
+        pos: posId
+      })
       // play()
     }
   }
 
   const moveBlock = (posId: number) => {
-    if (!myTurn()) return
-
     const action: Action = {
       updateType: 'MOVE_BLOCK',
       newPositionId: posId
     }
+
+    if (!validateAction(action)) return
+
     // play()
     validateActionAndUpdate(action)
+    gameType == 'COMPETITION' && setTempBlock(posId)
   }
 
   const handleClick = (posId: number) => {
@@ -316,15 +375,17 @@ export const GameComp = () => {
           board={        
             <Board 
               pieces={pieces}
-              paths={!!getActivePlayer()?.diceValue && !!activePiece && getActivePlayerGameState() == 'MOVE_PIECE' && getAvailableMovePaths(
+              paths={!!getActivePlayer()?.diceValue && !!activePiece && getActivePlayerGameState() == 'MOVE_PIECE' && !tempPiece && getAvailableMovePaths(
                 activePiece.pos,
                 getActivePlayer()?.color, 
                 getActivePlayer()?.diceValue, 
                 blocks, 
                 pieces)}
               blocks={blocks}
-              showBlockerCursor={getActivePlayer()?.gameState == 'MOVE_BLOCK'}
+              showBlockerCursor={getActivePlayer()?.gameState == 'MOVE_BLOCK' && !tempBlock}
               activePiece={activePiece}
+              tempPiece={tempPiece}
+              tempBlock={tempBlock}
               isGameOver={infos.find(i => i.infoType == 'GAMEOVER')}
               handleClick={handleClick}
               handlePieceClick={playerSelectedPiece}
@@ -333,12 +394,11 @@ export const GameComp = () => {
           instructions={
             <div className={styles.infoContainer}>
               {!isGameOver && <DiceRoller
-                diceValue = {getActivePlayer()?.diceValue}
-                setDiceValue={playerRolledDice}
-                showDice={myTurn() && getActivePlayer()?.gameState != 'MOVE_BLOCK'}
-                enableDice={myTurn() && getActivePlayer()?.gameState == 'ROLL_DICE'}
+                diceValue = {diceValue}
                 activePlayerColor={getActivePlayer()?.color}
+                gameState = {getActivePlayer()?.gameState}
                 nextMoveTime={getActivePlayer()?.nextMoveTime}
+                handleClick={playerRolledDice}
               />}
               {isGameOver && <div className={styles.buttonContainer}>
                 <button className={`button primary`} onClick={() => typeof lid == 'string' && socket.emit('startGame', lid, getUuid(), true)}>Play again</button>

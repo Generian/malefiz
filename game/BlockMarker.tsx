@@ -6,12 +6,13 @@ interface BlockMarkerProps {
     x: number
     y: number
   }
+  pending?: boolean
 }
 
-export const BlockMarker = ({ pieceSize, cursor }: BlockMarkerProps) => {
+export const BlockMarker = ({ pieceSize, cursor, pending }: BlockMarkerProps) => {
   return (
     <div 
-      className={styles.default}
+      className={`${styles.default} ${pending ? styles.pending : ''}`}
       style={{ 
         width: pieceSize, 
         height:pieceSize, 
