@@ -21,7 +21,7 @@ export const BlockMarker = ({ pieceSize, cursor, pending }: BlockMarkerProps) =>
         left: cursor ? cursor.x - pieceSize/2 : '', 
         top: cursor ? cursor.y - pieceSize/2 : '', 
         pointerEvents: cursor ? 'none' : 'all',
-        zIndex: cursor ? 2 : ''
+        zIndex: cursor ? 4 : ''
       }}
     >
     </div>

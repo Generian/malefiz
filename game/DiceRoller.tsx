@@ -63,15 +63,15 @@ export const DiceRoller = ({
 
 
   return (
-    <div className={styles.container}>
+    <div className={styles.container} style={{ pointerEvents: disableDice ? 'none' : 'all' }}>
       <Dice 
         value={diceValue}
         disabled={disableDice}
         onClick={handleClick}
       />
-      {/* {<div className={`${styles.diceHider} ${(((nextMoveTime > new Date().getTime()) && countdown) || !showDice) ? styles.hide : ''}`}>
+      {<div className={`${styles.diceHider} ${showCountdown ? styles.hide : ''}`}>
         <span className={`${styles.countdown} ${countdown && countdown < 2000 ? styles.imminent : ''}`}>{countdown && formatCountdown(countdown)}</span>
-      </div>} */}
+      </div>}
       {!disableDice && diceValue && <div className={`${styles.CTA} ${styles.bounce}`}>
         <ArrowUpwardRoundedIcon/>
         <span className={`${styles.CTA_text} ${activePlayerColor}`}>ROLL DICE!</span>

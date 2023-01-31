@@ -11,6 +11,9 @@ export const getSquareSize = ({width, height}: WindowSize) => {
     if (minDim < MIN_BOARD_SIZE) {
       return Math.max(minDim, maxDim * 0.67)
     } else {
+      if (width >= height && height > width - 200) {
+        return width - 200
+      }
       return minDim
     } 
   } else {

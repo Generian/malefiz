@@ -25,7 +25,7 @@
 }
 
 .hide {
-  opacity: 0.85;
+  opacity: 0.8;
   pointer-events: all;
 }
 
@@ -48,11 +48,13 @@
   display: flex;
   flex-direction: column;
   align-items: center;
+  pointer-events: none;
 }
 
 .CTA_text {
   font-weight: bold;
   text-align: center;
+  text-shadow: -1px -1px 0 white, 1px -1px 0 white, -1px 1px 0 var(--background), 1px 1px 0 white;
 }
 
 .bounce {
@@ -85,7 +87,7 @@
 
 .disabled {
   pointer-events: none;
-  opacity: 0.75;
+  opacity: 0.85;
 }
 
 .cube {

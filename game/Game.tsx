@@ -19,6 +19,8 @@ import { Game } from 'src/pages/api/socket'
 import useSound from 'use-sound'
 import { constants } from 'buffer'
 // import moveSound from 'src/public/sounds/move.mp3'
+import useKeypress from 'react-use-keypress';
+
 
 
 export const debugMode = false
@@ -62,20 +64,16 @@ export const GameComp = () => {
   const [infos, setInfos] = useState<Info[]>([])
   const [isGameOver, setIsGameOver] = useState(false)
 
+  useKeypress('Enter', () => {
+    playerRolledDice()
+  })
+
   useEffect(() => {
     const p = getActivePlayer()
     if (p?.diceValue && p?.gameState != 'ROLL_DICE') {
       setDiceValue(p.diceValue)
     }
   }, [players])
-
-  useEffect(() => {
-    document.addEventListener('keydown', handleKeyDown)
-
-    return () => {
-      document.removeEventListener('keydown', handleKeyDown)
-    }
-  }, [myColor, activePlayerColor, lid, gameType])
 
   const updateGameStateWithNewGameData = (newGame: Game) => {
     // Set game details
@@ -283,12 +281,6 @@ export const GameComp = () => {
     setTimeout(() => {
       validateActionAndUpdate(action)
     }, 1000)
-  }
-
-  const handleKeyDown = (event: { key: string }) => {
-    if (event.key === 'Enter') {
-      playerRolledDice()
-    }
   }
 
   const playerSelectedPiece = (piece: Piece) => {

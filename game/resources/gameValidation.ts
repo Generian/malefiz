@@ -69,7 +69,6 @@ export const validateGameUpdate = ({ game, color, action }: GameUpdate) => {
     if (!!newPlayer) {
       if (!itsPlayersTurn) {
         reason = "Not player's turn."
-        console.log("reason", action, player)
       } else {
         switch (action.updateType) {
           case 'ROLL_DICE':
