@@ -5,6 +5,7 @@ import { PlayerColor } from './resources/playerColors'
 import useSound from 'use-sound'
 import { Dice } from './Dice'
 import { GameState } from './resources/gameTypes'
+import { isMobile } from 'react-device-detect'
 
 interface DiceProps {
   diceValue: number | undefined
@@ -63,7 +64,7 @@ export const DiceRoller = ({
 
 
   return (
-    <div className={styles.container} style={{ pointerEvents: disableDice ? 'none' : 'all' }}>
+    <div className={`${styles.container}`} style={{ pointerEvents: disableDice ? 'none' : 'all' }}>
       <Dice 
         value={diceValue}
         disabled={disableDice}

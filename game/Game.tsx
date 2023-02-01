@@ -360,6 +360,17 @@ export const GameComp = () => {
     }
   }
 
+  const restartGame = () => {
+    if (typeof lid == 'string') {
+      socket.emit('startGame', lid, getUuid(), true)
+    } else {
+      if (!players) return
+      const game = initialiseGame(players, gameType, 0, undefined)
+      updateGameStateWithNewGameData(game)
+    }
+    setDiceValue(2)
+  }
+
   return (
     <div className={styles.container}>
       {(activePlayerColor && pieces && players) && <>
@@ -383,20 +394,22 @@ export const GameComp = () => {
               handlePieceClick={playerSelectedPiece}
             />
           }
+          dice={!isGameOver && <DiceRoller
+            diceValue = {diceValue}
+            activePlayerColor={getActivePlayer()?.color}
+            gameState = {getActivePlayer()?.gameState}
+            nextMoveTime={getActivePlayer()?.nextMoveTime}
+            handleClick={playerRolledDice}
+          />}
           instructions={
             <div className={styles.infoContainer}>
-              {!isGameOver && <DiceRoller
-                diceValue = {diceValue}
-                activePlayerColor={getActivePlayer()?.color}
-                gameState = {getActivePlayer()?.gameState}
-                nextMoveTime={getActivePlayer()?.nextMoveTime}
-                handleClick={playerRolledDice}
-              />}
               {isGameOver && <div className={styles.buttonContainer}>
-                <button className={`button primary`} onClick={() => typeof lid == 'string' && socket.emit('startGame', lid, getUuid(), true)}>Play again</button>
+                <button className={`button primary`} onClick={restartGame}>Play again</button>
                 <button className={`button`} onClick={() => router.push('/')}>Back to Lobby</button>
               </div>}
-              <div className={styles.bottomInfoContainer}>
+              <div 
+                className={styles.bottomInfoContainer}
+              >
                 <Infos infos={infos}/>
                 {!!lid && <PlayerOnlineState players={players} />}
               </div>

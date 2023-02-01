@@ -9,7 +9,7 @@ export const getSquareSize = ({width, height}: WindowSize) => {
     const minDim = Math.min(width, height)
     const maxDim = Math.max(width, height)
     if (minDim < MIN_BOARD_SIZE) {
-      return Math.max(minDim, maxDim * 0.67)
+      return minDim // Math.max(minDim, maxDim * 0.67)
     } else {
       if (width >= height && height > width - 200) {
         return width - 200
@@ -38,7 +38,13 @@ export const shouldUseLandscapeMode = ({width, height}: WindowSize) => {
   }
 }
 
-export const Layout = ({ board, instructions }: { board: ReactNode, instructions?: ReactNode }) => {
+interface LayoutProps { 
+  board: ReactNode, 
+  instructions?: ReactNode,
+  dice?: ReactNode
+}
+
+export const Layout = ({ board, instructions, dice }: LayoutProps) => {
   const windowSize = useWindowSize()
   if ((typeof windowSize == 'undefined') || !windowSize.width || !windowSize.height) return <></>
 
@@ -70,13 +76,18 @@ export const Layout = ({ board, instructions }: { board: ReactNode, instructions
         >
           {board}
         </div>
-        <div className={styles.fixedInstructionsContainer} style={{
+        <div className={`${styles.fixedInstructionsContainer} ${instructionsPosition.landScapeMode ? '' : styles.portrait}`} style={{
           left: instructionsPosition.left,
           top: instructionsPosition.top,
           width: instructionsPosition.width,
           height: instructionsPosition.height
         }}>
-          {instructions}
+          <div className={styles.dice}>
+            {dice}
+          </div>
+          <div className={styles.instructions}>
+            {instructionsPosition.landScapeMode && instructions}
+          </div>
         </div>
       </div>
     </PageFrame>

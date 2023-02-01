@@ -1,5 +1,13 @@
 .connection {
-  border: 3px solid var(--lines);
+  box-sizing: border-box;
+  min-width: 6px;
+  min-height: 6px;
   background-color: var(--lines);
   position: absolute;
+}
+
+@media only screen and (max-width: 600px) {
+  .connection {
+    border: 1px solid var(--background);
+  }
 }
