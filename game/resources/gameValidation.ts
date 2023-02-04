@@ -17,10 +17,11 @@ interface UPDATE_ROLL_DICE {
   updateType: 'ROLL_DICE'
 }
 
-interface UPDATE_MOVE_PIECE {
+export interface UPDATE_MOVE_PIECE {
   updateType: 'MOVE_PIECE'
-  activePiece?: Piece
+  activePiece: Piece
   newPositionId: number
+  path?: number[]
 }
 
 interface UPDATE_MOVE_BLOCK {
@@ -53,6 +54,7 @@ export const validateGameUpdate = ({ game, color, action }: GameUpdate) => {
   let newGame = {...game}
   let newPlayer = player ? {...player} : undefined
   let itsPlayersTurn = false
+  let newAction = {...action}
 
   if (!game.gameOver) {
     // Check if it's players turn
@@ -97,7 +99,8 @@ export const validateGameUpdate = ({ game, color, action }: GameUpdate) => {
               pieceToMove = []
               const playerPieces = game.pieces.filter(p => p.color == color)
               for (let i = 0; i < playerPieces.length; i++) {
-                const pieceMoveOptions = getAvailableMovePaths(playerPieces[i].pos, color, newPlayer.diceValue, game.blocks, game.pieces).map(p => p[p.length - 1])
+                const movePaths = getAvailableMovePaths(playerPieces[i].pos, color, newPlayer.diceValue, game.blocks, game.pieces)
+                const pieceMoveOptions = movePaths.map(p => p[p.length - 1])
                 if (pieceMoveOptions.includes(action.newPositionId)) {
                   pieceToMove = [...pieceToMove, playerPieces[i]]
                 }
@@ -119,16 +122,18 @@ export const validateGameUpdate = ({ game, color, action }: GameUpdate) => {
             // Filter out pieces of other players to check kick possibility:
             const otherPlayerPieces = game.pieces.filter(p => p.color != color)
 
-            const moveOptions = getAvailableMovePaths(pieceToMove.pos, newPlayer.color, newPlayer.diceValue, game.blocks, game.pieces).map(p => p[p.length - 1])
+            const movePaths = getAvailableMovePaths(pieceToMove.pos, newPlayer.color, newPlayer.diceValue, game.blocks, game.pieces)
+            const moveOptions = movePaths.map(p => p[p.length - 1])
 
             if (moveOptions.includes(action.newPositionId) && pieceToMove) {
               newGame.pieces = getNewPiecePositions(pieceToMove, action.newPositionId, game.pieces)
               newPlayer.gameState = 'ROLL_DICE'
 
+              // Check blocks
               if (game.blocks.includes(action.newPositionId)) {
                 newGame.blocks = game.blocks.filter(b => b != action.newPositionId)
                 newPlayer.gameState = 'MOVE_BLOCK'
-              } else if (otherPlayerPieces.map(p => p.pos).includes(action.newPositionId)) {
+              } else if (otherPlayerPieces.map(p => p.pos).includes(action.newPositionId)) { // Check if piece gets thrown
                 const pieceToReset = otherPlayerPieces.filter(o => o.pos == action.newPositionId)[0]
                 newGame.pieces = getNewPiecePositions(pieceToReset, getResetPiecePosition(pieceToReset, game.pieces), newGame.pieces)
                 newGame.infos = [...newGame.infos, {
@@ -136,6 +141,16 @@ export const validateGameUpdate = ({ game, color, action }: GameUpdate) => {
                   player: newPlayer,
                   kickedPlayer: game.players.find(p => p.color == pieceToReset.color)
                 }]
+              }
+
+              // Add path to action for animation
+              const path = movePaths.find(p => p[p.length - 1] == action.newPositionId)
+
+              if (path && newAction.updateType == 'MOVE_PIECE') {
+                newAction = {
+                  ...newAction,
+                  path
+                }
               }
 
               if (newPlayer.diceValue != 6 && newPlayer.gameState != 'MOVE_BLOCK') {
@@ -213,7 +228,7 @@ export const validateGameUpdate = ({ game, color, action }: GameUpdate) => {
     }
 
     if (isValid && newGame.actions) {
-      newGame.actions = [...newGame.actions, action]
+      newGame.actions = [...newGame.actions, newAction]
     }
   } else {
     reason = "Game is over."

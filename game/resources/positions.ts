@@ -37,6 +37,8 @@ export const getNewPiecePositions = (piece: Piece, newPiecePosition: number, pie
   return newPieces
 }
 
+export const getPositionFromId = (posId: number) => positions.filter(p => p.id == posId)[0]
+
 export const positions: Pos[] = [
   {
     id: 1,

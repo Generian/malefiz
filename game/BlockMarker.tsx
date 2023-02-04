@@ -1,4 +1,6 @@
 import styles from 'styles/BlockMarker.module.css'
+import blocker from 'src/public/block.png'
+import Image from 'next/image'
 
 interface BlockMarkerProps {
   pieceSize: number
@@ -24,6 +26,18 @@ export const BlockMarker = ({ pieceSize, cursor, pending }: BlockMarkerProps) =>
         zIndex: cursor ? 4 : ''
       }}
     >
+      <Image 
+        src={blocker} 
+        alt={`blocker`} 
+        width={pieceSize}
+        className={`${styles.piece} ${pending ? styles.pending : ''}`}
+        style={{
+          position: 'absolute',
+          top: -pieceSize*0.28,
+          // left: -pieceSize*0.05,
+          zIndex: 3
+        }}
+      />
     </div>
   )
 }

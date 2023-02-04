@@ -11,7 +11,7 @@
 /* Info */
 .infoContainer {
   position: absolute;
-  right: -500px;
+  left: -500px;
   transition: all 0.5s ease-in-out;
   opacity: 1;
   white-space: nowrap;
@@ -20,10 +20,10 @@
 }
 
 .phaseIn {
-  right: 1rem;
+  left: 0;
 }
 
 .phaseOut {
-  right: 1rem;
+  left: 0;
   opacity: 0;
 }

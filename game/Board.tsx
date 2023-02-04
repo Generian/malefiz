@@ -8,10 +8,12 @@ import { Piece } from './resources/gameTypes'
 import { useWindowSize } from 'src/utils/windowSize'
 import { getSquareSize } from 'src/components/Layout'
 import { BlockMarker } from './BlockMarker'
-import { useEffect, useState } from 'react'
+import { Dispatch, SetStateAction, useEffect, useState } from 'react'
 import { Info } from './Infos'
 import { WinnerInfo } from './WinnerInfo'
 import { isMobile } from 'react-device-detect'
+import { UPDATE_MOVE_PIECE } from './resources/gameValidation'
+import { PieceMoveAnimation } from './PieceMoveAnimation'
 
 interface BoardProps {
   pieces: Piece[]
@@ -21,6 +23,8 @@ interface BoardProps {
   activePiece?: Piece
   tempPiece?: Piece
   tempBlock?: number
+  piecesToAnimate: UPDATE_MOVE_PIECE[] 
+  setPiecesToAnimate: Dispatch<SetStateAction<UPDATE_MOVE_PIECE[]>>
   isGameOver: Info | undefined
   handleClick: (posId: number) => void
   handlePieceClick: (piece: Piece) => void
@@ -34,6 +38,8 @@ export const Board = ({
   activePiece,
   tempPiece,
   tempBlock,
+  piecesToAnimate,
+  setPiecesToAnimate,
   isGameOver,
   handleClick,
   handlePieceClick
@@ -54,13 +60,16 @@ export const Board = ({
     }
   }, [])
 
-  const boardSize = getSquareSize(windowSize) - 32
+  let { boardSize } = getSquareSize(windowSize)
+  boardSize -= 32
   const maxPosDimension = Math.max(...positions.map(p => p.x), ...positions.map(p => p.y))
   const spacing = boardSize / (maxPosDimension + 1)
   const positionSize = spacing * 0.8
   const pieceSize = positionSize * 0.85
   
   const fieldsToHighlight = paths && paths.map(p => p[p.length - 1])
+  const piecePositionsToAnimate = piecesToAnimate.map(p => p.newPositionId)
+
   return (
     <div
       className={`${styles.container} background`}
@@ -75,6 +84,13 @@ export const Board = ({
       <Decoration 
         spacing={spacing}
         positionSize={positionSize}
+      />
+      <PieceMoveAnimation
+        piecesToAnimate={piecesToAnimate}
+        setPiecesToAnimate={setPiecesToAnimate}
+        spacing={spacing}
+        positionSize={positionSize}
+        pieceSize={pieceSize}
       />
       {positions.map(pos => <Position 
         key={pos.id}
@@ -92,6 +108,7 @@ export const Board = ({
         {pieces
           .filter(piece => piece.pos == pos.id)
           .filter(piece => isMobile ? true : piece.pos != activePiece?.pos)
+          .filter(piece => !piecesToAnimate.map(p => p.newPositionId).includes(piece.pos))
           .map((piece, i) => <PieceMarker 
             key={i}
             piece={piece}

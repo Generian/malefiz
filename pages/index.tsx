@@ -11,7 +11,6 @@ import { LobbyComp } from 'src/components/lobby/Lobby'
 import Image from 'next/image'
 import title_image from '../public/title_image.png'
 import lobbyBackground_image from '../public/lobbyBackground.png'
-import suggestions from '../public/suggestions.png'
 import { GameState, GameType } from 'src/game/resources/gameTypes'
 
 export interface Player extends PublicPlayer {
@@ -189,14 +188,6 @@ export default function Home() {
                 </div>)}
               </div>
             </Paper> */}
-            <div style={{ position: 'fixed', bottom: '1.5rem', right: '1.5rem', width: '3rem', height: '3rem' }}>
-              <Image 
-                src={suggestions} 
-                alt='leave a suggestion' 
-                layout='fill'
-                objectFit='contain'
-              />
-            </div>
           </div>
         </div>
       </div>

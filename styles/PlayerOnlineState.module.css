@@ -2,7 +2,7 @@
   margin-bottom: 1rem;
   display: flex;
   flex-direction: column;
-  align-items: flex-end;
+  align-items: flex-start;
 }
 
 .userContainer {
@@ -10,16 +10,25 @@
   flex-direction: row;
   align-items: center;
   justify-content: space-between;
-  border-right-style: solid;  
-  border-right-color: var(--red);
-  border-right-width: 0.5rem;
-  padding-right: 0.5rem;
+  border-left-style: solid;  
+  border-left-color: var(--red);
+  border-left-width: 0.5rem;
+  padding-left: 0.5rem;
   margin-bottom: 0.25rem;
   transition: all 0.3s ease-in-out;
 }
 
+.gameState {
+  all: unset;
+  margin-left: 0.5rem;
+  opacity: 0.5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
 .online {
-  border-right-color: var(--green);
-  border-right-width: 0.25rem;
-  padding-right: 0.75rem;
+  border-left-color: var(--green);
+  border-left-width: 0.25rem;
+  padding-left: 0.75rem;
 }

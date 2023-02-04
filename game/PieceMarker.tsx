@@ -6,6 +6,7 @@ import yellow_piece from 'src/public/yellow_piece_2.png'
 import blue_piece from 'src/public/blue_piece_2.png'
 import Image from 'next/image'
 import { isMobile } from 'react-device-detect'
+import { Coord } from './Position'
 
 const pieceMapping = {
   "RED": red_piece,
@@ -21,11 +22,12 @@ interface PieceMarker {
     x: number
     y: number
   }
+  coords?: Coord
   pending?: boolean
   handleClick?: (piece: Piece) => void
 }
 
-export const PieceMarker = ({ piece, pieceSize, cursor, pending, handleClick }: PieceMarker) => {
+export const PieceMarker = ({ piece, pieceSize, cursor, coords, pending, handleClick }: PieceMarker) => {
 
   const clickHandler = handleClick ? () => handleClick(piece) : () => {}
 
@@ -36,11 +38,12 @@ export const PieceMarker = ({ piece, pieceSize, cursor, pending, handleClick }: 
         width: pieceSize, 
         height:pieceSize, 
         borderRadius: pieceSize/2,
-        position: cursor ? 'fixed' : 'relative', 
-        left: cursor ? cursor.x - pieceSize/2 : '', 
-        top: cursor ? cursor.y - pieceSize/2 : '', 
-        pointerEvents: cursor ? 'none' : 'all',
-        zIndex: cursor ? 4 : ''
+        position: cursor ? 'fixed' : coords ? 'absolute' : 'relative', 
+        left: cursor ? cursor.x - pieceSize/2 : coords ? coords.x - pieceSize/2 : '', 
+        top: cursor ? cursor.y - pieceSize/2 : coords ? coords.y - pieceSize/2 : '', 
+        pointerEvents: (cursor || coords) ? 'none' : 'all',
+        zIndex: (cursor || coords) ? 4 : '',
+        transition: coords ? 'top .2s ease-in, left .2s ease-in' : 'none'
       }}
       onClick={clickHandler}
       // onMouseDown={isMobile ? () => {} : clickHandler}

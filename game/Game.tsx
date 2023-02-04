@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import styles from 'styles/Game.module.css'
 import { DiceRoller } from 'src/game/DiceRoller'
 import { Board } from './Board'
@@ -14,12 +14,12 @@ import { Player, PublicPlayer } from 'src/pages'
 import { Layout } from 'src/components/Layout'
 import { Info, Infos } from './Infos'
 import { PlayerOnlineState } from './PlayerOnlineState'
-import { Action, initialiseGame, validateGameUpdate } from './resources/gameValidation'
+import { Action, initialiseGame, UPDATE_MOVE_PIECE, validateGameUpdate } from './resources/gameValidation'
 import { Game } from 'src/pages/api/socket'
 import useSound from 'use-sound'
 import { constants } from 'buffer'
-// import moveSound from 'src/public/sounds/move.mp3'
 import useKeypress from 'react-use-keypress';
+import { useAudio } from './Audio'
 
 
 
@@ -27,21 +27,9 @@ export const debugMode = false
 
 let socket: Socket<ServerToClientEvents, ClientToServerEvents>
 
-const didPieceMove = (n: Piece[], o: Piece[]) => {
-  let moved = false
-
-  n.forEach(p => {
-    if (!o.find(piece => p.pos == piece.pos && p.color == piece.color)) {
-      moved = true
-      // console.log("play sound")
-    }
-  })
-
-  return moved
-}
-
 export const GameComp = () => {
   const router = useRouter()
+  const playSound = useAudio()
   // const [play] = useSound(moveSound)
   const { lid, r, g, y, b } = router.query
 
@@ -50,6 +38,7 @@ export const GameComp = () => {
   const [players, setPlayers] = useState<Player[]>()
   const [pieces, setPieces] = useState<Piece[]>()
   const [blocks, setBlocks] = useState<number[]>(defaultBlocks)
+  const [actions, setActions] = useState<Action[] | undefined>()
   const [activePlayerColor, setActivePlayerColor] = useState<PlayerColor>() // FYI: This one is not required in competition mode, given that all players are active at the same time and their move right is only bound by the dice countdown.
 
   // Local-only data
@@ -57,6 +46,7 @@ export const GameComp = () => {
   const [activePiece, setActivePiece] = useState<Piece>()
   const [tempPiece, setTempPiece] = useState<Piece>()
   const [tempBlock, setTempBlock] = useState<number>()
+  const [piecesToAnimate, setPiecesToAnimate] = useState<UPDATE_MOVE_PIECE[]>([])
   const [diceValue, setDiceValue] = useState<number | undefined>(2)
 
   // Auxiliary state
@@ -75,20 +65,29 @@ export const GameComp = () => {
     }
   }, [players])
 
-  const updateGameStateWithNewGameData = (newGame: Game) => {
+  useEffect(() => {
+    // Check for other pieces that moved
+    if (actions?.length && myColor) {
+      const latestAction = actions[actions.length - 1]
+
+      if (latestAction.updateType != 'MOVE_PIECE') return
+      if (!latestAction.activePiece) return
+      if (latestAction.activePiece.color == myColor) return
+
+      setPiecesToAnimate(a => [...a, latestAction])
+      // playSound('move')
+    }
+  }, [actions])
+
+  const updateGameStateWithNewGameData = (newGame: Game, myColor?: PlayerColor) => {
     // Set game details
     setGameType(newGame.gameType)
     setPlayers([...newGame.players])
-    setPieces(pieces => {
-      // Play move sound
-      if (pieces && didPieceMove(newGame.pieces, pieces)) {
-        // play()
-      }
-      return newGame.pieces
-    })
+    setPieces(newGame.pieces)
     setBlocks(newGame.blocks)
     setActivePlayerColor(newGame.activePlayerColor)
     setInfos(newGame.infos)
+    setActions(newGame.actions)
     setIsGameOver(newGame.gameOver)
     setTempPiece(temp => {
       temp && setActivePiece(undefined)
@@ -151,10 +150,10 @@ export const GameComp = () => {
 
         if (!isValid) {
           console.error("Move failed! Reason:", reason)
-          updateGameStateWithNewGameData(newGame)
+          updateGameStateWithNewGameData(newGame, myColor)
         } else {
           console.log("Received game update (local):", newGame)
-          updateGameStateWithNewGameData(newGame)
+          updateGameStateWithNewGameData(newGame, myColor)
         }
 
       } else {
@@ -182,7 +181,7 @@ export const GameComp = () => {
       const playersToInitialiseGame = colorsFromParams.length ? colorsFromParams : activeColors(true, true, true, true)
       const game = initialiseGame(playersToInitialiseGame, gameType, 0, undefined)
 
-      updateGameStateWithNewGameData(game)
+      updateGameStateWithNewGameData(game, myColor)
     }
   }, [router.query])
 
@@ -216,7 +215,7 @@ export const GameComp = () => {
           router.push('/')
         } else {
           // Set game details
-          updateGameStateWithNewGameData(game)
+          updateGameStateWithNewGameData(game, myColor)
 
           // Set player's color
           setMyColor(playerColor)
@@ -229,7 +228,7 @@ export const GameComp = () => {
     ) => {
       if (game.lobbyId == lid) {
         console.log("Received game update:", game)
-        updateGameStateWithNewGameData(game)
+        updateGameStateWithNewGameData(game, myColor)
       } else {
         console.log("Received game update for another lobby.")
       }
@@ -270,6 +269,7 @@ export const GameComp = () => {
   const myTurn = () => (myColor == activePlayerColor) || !lid || gameType == 'COMPETITION'
 
   const playerRolledDice = () => {
+    console.log('roll dice')
     const action: Action = {
       updateType: 'ROLL_DICE',
     }
@@ -277,6 +277,7 @@ export const GameComp = () => {
     if (!validateAction(action)) return
 
     setDiceValue(undefined)
+    playSound('dice')
 
     setTimeout(() => {
       validateActionAndUpdate(action)
@@ -296,6 +297,8 @@ export const GameComp = () => {
   }
 
   const moveActivePiece = (posId: number) => {
+    if (!activePiece) return
+
     const action: Action = {
       updateType: 'MOVE_PIECE',
       activePiece: activePiece,
@@ -316,7 +319,7 @@ export const GameComp = () => {
         ...activePiece,
         pos: posId
       })
-      // play()
+      playSound('move')
     }
   }
 
@@ -328,8 +331,8 @@ export const GameComp = () => {
 
     if (!validateAction(action)) return
 
-    // play()
     validateActionAndUpdate(action)
+    playSound('move')
     gameType == 'COMPETITION' && setTempBlock(posId)
   }
 
@@ -366,7 +369,7 @@ export const GameComp = () => {
     } else {
       if (!players) return
       const game = initialiseGame(players, gameType, 0, undefined)
-      updateGameStateWithNewGameData(game)
+      updateGameStateWithNewGameData(game, myColor)
     }
     setDiceValue(2)
   }
@@ -389,6 +392,8 @@ export const GameComp = () => {
               activePiece={activePiece}
               tempPiece={tempPiece}
               tempBlock={tempBlock}
+              piecesToAnimate={piecesToAnimate}
+              setPiecesToAnimate={setPiecesToAnimate}
               isGameOver={infos.find(i => i.infoType == 'GAMEOVER')}
               handleClick={handleClick}
               handlePieceClick={playerSelectedPiece}
