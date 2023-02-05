@@ -19,37 +19,37 @@ const renderAction = (i: Info) => {
   switch (i.infoType) {
 
     case 'ROLLED_DICE':
-      return <>
-      <span className={`bold ${i.player.color}`}>{i.player.username}</span>
-      {` rolled a `}
+      return <div className={styles.info}>
+      <span className={`bold ${styles.username} ${i.player.color}`}>{i.player.username}</span>
+      <span>{' rolled a '}</span>
       <span className={`bold`}>{i.diceValue}</span>
-    </>
+    </div>
 
     case 'KICKED_PLAYER':
-      return <>
-      <span className={`bold ${i.player.color}`}>{i.player.username}</span>
-      {` kicked `}
-      <span className={`bold ${i.kickedPlayer?.color}`}>{i.kickedPlayer?.username}</span>
-    </>
+      return <div className={styles.info}>
+      <span className={`bold ${styles.username} ${styles.short} ${i.player.color}`}>{i.player.username}</span>
+      <span>{' kicked '}</span>
+      <span className={`bold ${styles.username} ${styles.short} ${i.kickedPlayer?.color}`}>{i.kickedPlayer?.username}</span>
+    </div>
 
     case 'MOVED_BLOCK':
-      return <>
-      <span className={`bold ${i.player.color}`}>{i.player.username}</span>
-      {` moved a `}
+      return <div className={styles.info}>
+      <span className={`bold ${styles.username} ${i.player.color}`}>{i.player.username}</span>
+      <span>{' moved a '}</span>
       <span className={`bold`}>blocker</span>
-    </>
+    </div>
 
     case 'TURN':
-      return <>
-      <span className={`bold ${i.player.color}`}>{i.player.username}</span>
-      {`'s turn`}
-    </>
+      return <div className={styles.info}>
+      <span className={`bold ${styles.username} ${i.player.color}`}>{i.player.username}</span>
+      <span>{"'s turn"}</span>
+    </div>
 
     case 'GAMEOVER':
-      return <>
-        <span className={`bold ${i.player.color}`}>{i.player.username}</span>
+      return <div className={styles.info}>
+        <span className={`bold ${styles.username} ${i.player.color}`}>{i.player.username}</span>
         <span className={`bold`}> won the game!</span>
-      </>
+      </div>
   
     default:
       return <span></span>

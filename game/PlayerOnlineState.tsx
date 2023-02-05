@@ -17,7 +17,7 @@ export const PlayerOnlineState = ({ players }:PlayerOnlineStateProps) => {
         key={p.username} 
         className={`${styles.userContainer} ${p.online ? styles.online : ''}`}
       >
-        <span className={`bold ${p.color}`}>{p.username}</span>
+        <span className={`bold ${p.color} ${styles.username}`}>{p.username}</span>
         <div className={styles.gameState}>
           {p.gameState == 'ROLL_DICE' && <CasinoOutlinedIcon fontSize="small" />}
           {p.gameState == 'MOVE_PIECE' && <Man4OutlinedIcon fontSize="small" />}

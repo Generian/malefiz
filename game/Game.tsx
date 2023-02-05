@@ -59,11 +59,19 @@ export const GameComp = () => {
   })
 
   useEffect(() => {
+    // Set dice value for single player game
     const p = getActivePlayer()
     if (p?.diceValue && p?.gameState != 'ROLL_DICE') {
       setDiceValue(p.diceValue)
     }
   }, [players])
+
+  useEffect(() => {
+    // Reset active piece in case it gets kicked
+    if (!pieces?.find(p => p.pos == activePiece?.pos && p.color == activePiece?.color)) {
+      setActivePiece(undefined)
+    }
+  }, [pieces])
 
   useEffect(() => {
     // Check for other pieces that moved

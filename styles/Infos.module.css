@@ -19,6 +19,23 @@
   text-overflow: ellipsis;
 }
 
+.info > * {
+  vertical-align: middle;
+}
+
+.username {
+  display: inline-block;
+  white-space: nowrap;
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-shadow: -1px -1px 0 white, 1px -1px 0 white, -1px 1px 0 var(--background), 1px 1px 0 white;
+}
+
+.short {
+  max-width: 150px;
+}
+
 .phaseIn {
   left: 0;
 }

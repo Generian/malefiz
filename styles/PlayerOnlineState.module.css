@@ -18,6 +18,14 @@
   transition: all 0.3s ease-in-out;
 }
 
+.username {
+  white-space: nowrap;
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-shadow: -1px -1px 0 white, 1px -1px 0 white, -1px 1px 0 var(--background), 1px 1px 0 white;
+}
+
 .gameState {
   all: unset;
   margin-left: 0.5rem;

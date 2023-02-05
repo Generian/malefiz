@@ -13,8 +13,8 @@ export const getSquareSize = ({width, height}: WindowSize) => {
     const minDim = Math.min(width, height)
 
     if (width >= MIN_BOARD_SIZE + INFO_PANEL_WIDTH) {
-      if (minDim < MAX_BOARD_SIZE) {
-        boardSize = Math.min(height, width - INFO_PANEL_WIDTH)
+      if (minDim < MAX_BOARD_SIZE + INFO_PANEL_WIDTH) {
+        boardSize = Math.min(MAX_BOARD_SIZE, height, width - INFO_PANEL_WIDTH)
       }
     } else {
       landscapeMode = false
@@ -26,7 +26,6 @@ export const getSquareSize = ({width, height}: WindowSize) => {
       }
     }
   }
-
   return { boardSize, landscapeMode, overlayMode }
 }
 
@@ -57,7 +56,7 @@ export const Layout = ({ board, instructions, dice }: LayoutProps) => {
   const windowSize = useWindowSize()
   if ((typeof windowSize == 'undefined') || !windowSize.width || !windowSize.height) return <></>
 
-  const { boardSize, landscapeMode } = getSquareSize(windowSize)
+  const { boardSize, landscapeMode, overlayMode } = getSquareSize(windowSize)
 
   // const instructionsPosition = {
   //   landScapeMode: false,
@@ -80,17 +79,22 @@ export const Layout = ({ board, instructions, dice }: LayoutProps) => {
 
   return (
     <PageFrame noZoom={true}>
-      <div className={styles.pageContainer}>
+      <div 
+        className={styles.pageContainer}
+        style={{
+          alignItems: overlayMode ? 'flex-start' : 'center'
+        }}
+      >
         <div 
           className={`${styles.container} ${landscapeMode ? styles.landscape : styles.portrait}`}
           style={{ 
             width: landscapeMode ? '100vw' : boardSize,
-            height: landscapeMode ? boardSize : '100vh'
+            height: landscapeMode ? boardSize : '100vh',
           }}
         >
           <div 
             className={styles.square}
-            style={{ width: boardSize, height: boardSize }}
+            style={{ minWidth: boardSize, minHeight: boardSize }}
           >
             {board}
           </div>
@@ -101,12 +105,15 @@ export const Layout = ({ board, instructions, dice }: LayoutProps) => {
               height: landscapeMode ? '100%' : ''
             }}
           >
-            <div className={styles.dice}>
+            <div className={`${styles.dice} ${overlayMode ? styles.dice_overlay : styles.dice_normal}`}>
               {dice}
             </div>
-            <div className={styles.instructions}>
-              {landscapeMode && instructions}
-            </div>
+            {!overlayMode && <div 
+              className={styles.instructions}
+              style={{}}
+            >
+              {instructions}
+            </div>}
           </div>
         </div>
       </div>
