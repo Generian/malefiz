@@ -25,29 +25,36 @@ export interface Coord {
   y: number
 }
 
-export const getPosition = (x: number, y: number, spacing: number, positionSize: number, type: 'POSITION' | 'BORDER' | 'CENTER' = 'POSITION', height: number = 0) => {
+export const getPosition = (
+  x: number, 
+  y: number, 
+  spacing: number, 
+  positionSize: number, 
+  type: 'POSITION' | 'BORDER' | 'CENTER' = 'POSITION', 
+  height: number = 0, 
+) => {
   switch (type) {
     case 'POSITION':
       return {
-        x: (x - 1) * spacing + spacing - positionSize/2 - 0.66*REM,
+        x: (x - 1) * spacing + spacing - positionSize/2 - 0.66*REM*(isMobile ? 0 : 1),
         y: 18 * spacing - (y + 4) * spacing + spacing/2
       }
 
     case 'BORDER':
       return {
-        x: (x - 1) * spacing + spacing - BORDER - 0.66*REM, 
+        x: (x - 1) * spacing + spacing - BORDER - 0.66*REM*(isMobile ? 0 : 1), 
         y: 18 * spacing - (y + 4) * spacing + spacing/2 + positionSize/2 - (spacing * height) - BORDER
       }
     
     case 'CENTER':
       return {
-        x: (x - 1) * spacing + spacing - 0.66*REM,
+        x: (x - 1) * spacing + spacing - 0.66*REM*(isMobile ? 0 : 1),
         y: 18 * spacing - (y + 4) * spacing + spacing - 0.3*REM
       }
   
     default:
       return {
-        x: (x - 1) * spacing + spacing - positionSize/2 - 0.66*REM,
+        x: (x - 1) * spacing + spacing - positionSize/2 - 0.66*REM*(isMobile ? 0 : 1),
         y: 18 * spacing - (y + 4) * spacing + spacing/2
       }
   }

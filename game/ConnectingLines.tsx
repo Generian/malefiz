@@ -3,7 +3,6 @@ import styles from 'styles/ConnectingLines.module.css'
 import { useEffect, useState } from "react"
 import { getPosition } from "./Position"
 
-
 const getConnectionDetails = (c: [number, number]) => {
   const start = positions.filter(p => p.id == c[0])[0]
   const end = positions.filter(p => p.id == c[1])[0]
@@ -36,7 +35,6 @@ export const ConnectingLines = ({ spacing, positionSize }: ConnectingLineProps) 
     w: number;
     h: number;
   }[]>([])
-
   useEffect(() => {
     setConnections(getConnections())
   }, [])

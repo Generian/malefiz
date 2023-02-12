@@ -50,32 +50,14 @@ interface LayoutProps {
   board: ReactNode, 
   instructions?: ReactNode,
   dice?: ReactNode
+  menu?: ReactNode
 }
 
-export const Layout = ({ board, instructions, dice }: LayoutProps) => {
+export const Layout = ({ board, instructions, dice, menu }: LayoutProps) => {
   const windowSize = useWindowSize()
   if ((typeof windowSize == 'undefined') || !windowSize.width || !windowSize.height) return <></>
 
   const { boardSize, landscapeMode, overlayMode } = getSquareSize(windowSize)
-
-  // const instructionsPosition = {
-  //   landScapeMode: false,
-  //   left: 0,
-  //   top: 0,
-  //   width: 0,
-  //   height: 0
-  // }
-
-  // if (windowSize.width > windowSize.height) {
-  //   instructionsPosition.landScapeMode = true
-  //   instructionsPosition.left = getSquareSize(windowSize)
-  //   instructionsPosition.width = windowSize.width - getSquareSize(windowSize)
-  //   instructionsPosition.height = getSquareSize(windowSize)
-  // } else {
-  //   instructionsPosition.top = getSquareSize(windowSize)
-  //   instructionsPosition.width = windowSize.width
-  //   instructionsPosition.height = windowSize.height - getSquareSize(windowSize)
-  // }
 
   return (
     <PageFrame noZoom={true}>
@@ -115,34 +97,11 @@ export const Layout = ({ board, instructions, dice }: LayoutProps) => {
               {instructions}
             </div>}
           </div>
+          <div className={styles.menu}>
+            {menu}
+          </div>
         </div>
       </div>
     </PageFrame>
   )
-
-  // return (
-  //   <PageFrame noZoom={true}>
-  //     <div className={styles.container} style={{ flexDirection: (windowSize.width > windowSize.height) ? 'row' : 'column'}}>
-  //       <div 
-  //         className={styles.square}
-  //         style={{ width: getSquareSize(windowSize), height: getSquareSize(windowSize) }}
-  //       >
-  //         {board}
-  //       </div>
-  //       <div className={`${styles.fixedInstructionsContainer} ${instructionsPosition.landScapeMode ? '' : styles.portrait}`} style={{
-  //         left: instructionsPosition.left,
-  //         top: instructionsPosition.top,
-  //         width: 200,
-  //         height: instructionsPosition.height
-  //       }}>
-  //         <div className={styles.dice}>
-  //           {dice}
-  //         </div>
-  //         <div className={styles.instructions}>
-  //           {instructionsPosition.landScapeMode && instructions}
-  //         </div>
-  //       </div>
-  //     </div>
-  //   </PageFrame>
-  // )
 }

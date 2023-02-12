@@ -99,9 +99,8 @@ export default function Home() {
     socket.emit('leaveLobby', lobbyId, getUuid())
   }
 
-  const handleUsernameChange = (lobbyId?: string) => {
-    const input = document.getElementById('usernameInput') as HTMLInputElement
-    socket.emit('updateUsername', input.value, getUuid(), lobbyId)
+  const handleUsernameChange = (lobbyId: string, newUsername: string) => {
+    socket.emit('updateUsername', newUsername, getUuid(), lobbyId)
   }
 
   const handleChangePlayerColor = (lobbyId: string, color?: PlayerColor) => {

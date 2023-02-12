@@ -20,6 +20,7 @@ import useSound from 'use-sound'
 import { constants } from 'buffer'
 import useKeypress from 'react-use-keypress';
 import { useAudio } from './Audio'
+import { Menu } from 'src/components/Menu'
 
 
 
@@ -428,6 +429,7 @@ export const GameComp = () => {
               </div>
             </div>
           }
+          menu={<Menu/>}
         />
       </>}
     </div>

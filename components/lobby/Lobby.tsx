@@ -1,5 +1,5 @@
 import { IconButton, Paper } from "@mui/material"
-import { useEffect, useState } from "react"
+import { ChangeEvent, useEffect, useState } from "react"
 import { activeColors, PlayerColor } from "src/game/resources/playerColors"
 import { Lobby, Player } from "src/pages"
 import { getUuid } from "src/utils/helper"
@@ -11,12 +11,20 @@ import { GameType } from "src/game/resources/gameTypes"
 interface LobbyCompProps {
   lobby: Lobby
   handleChangePlayerColor: (lobbyId: string, color?: PlayerColor) => void
-  handleUsernameChange: (lobbyId: string) => void
+  handleUsernameChange: (lobbyId: string, newUsername: string) => void
   joinLobby: (lobbyId: string, color: PlayerColor) => void
   leaveLobby: (lobbyId: string) => void
   startMultiplayerGame: (lobbyId: string, gameType: GameType, cooldown: number) => void
   isPlayerInALobby: (lobbyId?: string) => boolean
   updateLobbySettings: (lobbyId: string, gameType: GameType, cooldown: number) => void
+}
+
+interface PlayerPlaceholderProps {
+  p: Player, 
+  lobby: Lobby,
+  handleInputConfirm: (e: string) => void, 
+  isPlayerInALobby: (lobbyId: string) => boolean, 
+  leaveLobby: (lobbyId: string) => void
 }
 
 const ColorIndicator = ({ color, active }: {color: PlayerColor, active: boolean}) => {
@@ -33,6 +41,62 @@ const EmptyPlayerPlaceholder = ({ color, onClick }: {color: PlayerColor, onClick
   </div>
 }
 
+const PlayerPlaceholder = ({ 
+  p,
+  lobby,
+  handleInputConfirm, 
+  isPlayerInALobby, 
+  leaveLobby 
+}: PlayerPlaceholderProps ) => {
+  const [username, setUsername] = useState(p.username)
+
+  if (p.uuid == getUuid()) {
+    return <div key={p.uuid} className={styles.player}>
+      <ColorIndicator color={p.color} active={true} />
+      <div className={styles.usernameContainer}>
+        {/* {!editUsername && <span 
+          onClick={() => setEditUsername(!editUsername)} 
+          className={`${styles.userName} ${styles.highlightPlayerName} ${styles.clickable}`}
+        >
+          {p.username}
+        </span>} */}
+        <input
+          id="usernameInput"
+          placeholder={username}
+          className={styles.usernameInput}
+          onChange={e => {
+            setTimeout(() => {
+              handleInputConfirm(e.target.value)
+            }, 0)
+          }
+          }
+          // onBlur={() => {
+          //   if (username != 'Seb') return
+          //   handleInputConfirm(username)
+          // }}
+        />
+        {isPlayerInALobby(lobby.id) && <IconButton 
+          aria-label="exit"
+          size="small"
+          onClick={() => leaveLobby(lobby.id)}
+        >
+          <CloseIcon fontSize="inherit" />
+        </IconButton>}
+      </div>
+    </div>
+  } else {
+    return <div key={p.uuid} className={styles.player}>
+      <ColorIndicator color={p.color} active={true} />
+      <div className={styles.usernameContainer}>
+        <div className={styles.otherPlayer}>
+          <span className={styles.userName}>{p.username}</span>
+          <div className={`${styles.onlineStatus} ${p.online ? styles.online : ''}`}></div>
+        </div>
+      </div>
+    </div>
+  }
+}
+
 export const LobbyComp = ({ 
   lobby, 
   handleChangePlayerColor, 
@@ -47,7 +111,7 @@ export const LobbyComp = ({
 
   const [gameType, setGameType] = useState<GameType>(lobby.gameType)
   const [cooldown, setCooldown] = useState(lobby.cooldown)
-  const [editUsername, setEditUsername] = useState(false)
+  // const [editUsername, setEditUsername] = useState(false)
 
   useEffect(() => {
     setGameType(lobby.gameType)
@@ -62,53 +126,14 @@ export const LobbyComp = ({
     }
   }
 
-  const handleInputConfirm = (event: KeyboardEvent) => {
-    if (event.key === 'Enter') {
-      handleUsernameChange(lobby.id)
-      setEditUsername(false)
+  const handleInputConfirm = (newUsername: string) => {
+    if (newUsername) {
+      handleUsernameChange(lobby.id, newUsername)
+      // setEditUsername(false)
     }
   }
 
-  const PlayerPlaceholder = ({ p }: { p: Player } ) => {
-    if (p.uuid == getUuid()) {
-      return <div key={p.uuid} className={styles.player}>
-        <ColorIndicator color={p.color} active={true} />
-        <div className={styles.usernameContainer}>
-          {!editUsername && <span 
-            onClick={() => setEditUsername(!editUsername)} 
-            className={`${styles.userName} ${styles.highlightPlayerName} ${styles.clickable}`}
-          >
-            {p.username}
-          </span>}
-          {editUsername && <>
-            <input
-              id="usernameInput"
-              placeholder={p.username}
-              className={styles.usernameInput}
-              onKeyDown={handleInputConfirm}
-            />
-          </>}
-          {isPlayerInALobby(lobby.id) && <IconButton 
-            aria-label="exit"
-            size="small"
-            onClick={() => leaveLobby(lobby.id)}
-          >
-            <CloseIcon fontSize="inherit" />
-          </IconButton>}
-        </div>
-      </div>
-    } else {
-      return <div key={p.uuid} className={styles.player}>
-        <ColorIndicator color={p.color} active={true} />
-        <div className={styles.usernameContainer}>
-          <div className={styles.otherPlayer}>
-            <span className={styles.userName}>{p.username}</span>
-            <div className={`${styles.onlineStatus} ${p.online ? styles.online : ''}`}></div>
-          </div>
-        </div>
-      </div>
-    }
-  }
+  
 
   return (
     <Paper className={styles.container} elevation={3}>
@@ -132,9 +157,16 @@ export const LobbyComp = ({
       {activeColors().map(c => {
         const player = lobby.players.filter(p => p.color == c.color)[0]
         if (player) {
-          return <PlayerPlaceholder key={player.username} p={player}/>
+          return <PlayerPlaceholder 
+            key={`${lobby.id}_${c.color}`} 
+            p={player}
+            lobby={lobby}
+            handleInputConfirm={handleInputConfirm}
+            isPlayerInALobby={isPlayerInALobby}
+            leaveLobby={leaveLobby}
+          />
         } else {
-          return <EmptyPlayerPlaceholder key={c.color} color={c.color} onClick={isPlayerInALobby(lobby.id) ? () => handleChangePlayerColor(lobby.id, c.color) : () => joinLobby(lobby.id, c.color)}/>
+          return <EmptyPlayerPlaceholder key={`${lobby.id}_${c.color}`} color={c.color} onClick={isPlayerInALobby(lobby.id) ? () => handleChangePlayerColor(lobby.id, c.color) : () => joinLobby(lobby.id, c.color)}/>
         }
       })}
       {<button

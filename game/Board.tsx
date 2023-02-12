@@ -61,19 +61,23 @@ export const Board = ({
   }, [])
 
   let { boardSize } = getSquareSize(windowSize)
-  boardSize -= 32
+  boardSize -= isMobile ? 6.4 : 32
   const maxPosDimension = Math.max(...positions.map(p => p.x), ...positions.map(p => p.y))
   const spacing = boardSize / (maxPosDimension + 1)
   const positionSize = spacing * 0.8
   const pieceSize = positionSize * 0.85
   
   const fieldsToHighlight = paths && paths.map(p => p[p.length - 1])
-  const piecePositionsToAnimate = piecesToAnimate.map(p => p.newPositionId)
 
   return (
     <div
       className={`${styles.container} background`}
-      style={{ minWidth: boardSize, minHeight: boardSize }}
+      style={{ 
+        minWidth: boardSize, 
+        minHeight: boardSize,
+        borderWidth: isMobile ? 0 : '0.66rem',
+        margin: isMobile ? '0.2rem' : '1rem'
+      }}
     >
       {(showBlockerCursor || (tempPiece?.pos && blocks?.includes(tempPiece?.pos))) && !isGameOver && !isMobile && <BlockMarker pieceSize={pieceSize} cursor={mousePos}/>}
       {activePiece && !tempPiece && !isGameOver && !isMobile && <PieceMarker 
