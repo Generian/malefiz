@@ -70,7 +70,7 @@
 }
 
 .highlightPlayerName {
-  font-weight: bold;
+  font-weight: bold!important;
 }
 
 .placeholderColor {
@@ -90,9 +90,18 @@
 }
 
 .usernameInput {
-  border: none;
-  width: 50%;
   all: unset;
+  font-weight: bold;
+  width: 100%;
+  transition: all 0.2s ease-in-out;
+  border-top: 3px solid transparent;
+  border-bottom: 3px solid transparent;
+}
+
+.usernameInput:focus {
+  font-weight: 400;
+  border-bottom: 3px solid var(--background);
+  background-color: var(--gray1);
 }
 
 .usernameContainer {
@@ -102,6 +111,13 @@
   justify-content: space-between;
   align-items: center;
   flex: 1;
+}
+
+.usernameButtonContainer {
+  display: flex;
+  flex: 1;
+  flex-direction: row-reverse;
+  justify-content: space-between;
 }
 
 .otherPlayer {

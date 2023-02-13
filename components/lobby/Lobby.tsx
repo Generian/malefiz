@@ -1,11 +1,12 @@
 import { IconButton, Paper } from "@mui/material"
-import { ChangeEvent, useEffect, useState } from "react"
+import { useEffect, useState } from "react"
 import { activeColors, PlayerColor } from "src/game/resources/playerColors"
 import { Lobby, Player } from "src/pages"
 import { getUuid } from "src/utils/helper"
 import styles from 'styles/Lobby.module.css'
 import React, { KeyboardEvent } from 'react'
 import CloseIcon from '@mui/icons-material/Close'
+import CheckRoundedIcon from '@mui/icons-material/CheckRounded'
 import { GameType } from "src/game/resources/gameTypes"
 
 interface LobbyCompProps {
@@ -48,40 +49,56 @@ const PlayerPlaceholder = ({
   isPlayerInALobby, 
   leaveLobby 
 }: PlayerPlaceholderProps ) => {
-  const [username, setUsername] = useState(p.username)
+  const [isEditing, setIsEditing] = useState(false)
 
   if (p.uuid == getUuid()) {
     return <div key={p.uuid} className={styles.player}>
       <ColorIndicator color={p.color} active={true} />
       <div className={styles.usernameContainer}>
-        {/* {!editUsername && <span 
-          onClick={() => setEditUsername(!editUsername)} 
-          className={`${styles.userName} ${styles.highlightPlayerName} ${styles.clickable}`}
-        >
-          {p.username}
-        </span>} */}
         <input
-          id="usernameInput"
-          placeholder={username}
-          className={styles.usernameInput}
-          onChange={e => {
-            setTimeout(() => {
-              handleInputConfirm(e.target.value)
-            }, 0)
-          }
-          }
-          // onBlur={() => {
-          //   if (username != 'Seb') return
-          //   handleInputConfirm(username)
-          // }}
+          className={`${styles.usernameInput}`}
+          defaultValue={p.username}
+          onFocus={e => {
+            setIsEditing(true)
+            e.target.select()
+          }}
+          onBlur={e => {
+            const newUsername = e.target.value
+            if (!newUsername) {
+              e.target.value = p.username
+            } else {
+              handleInputConfirm(newUsername)
+            }
+            setIsEditing(false)
+          }}
+          onKeyDown={(e: KeyboardEvent) => {
+            if (e.key == 'Enter') {
+              if (document.activeElement instanceof HTMLElement) {
+                document.activeElement.blur()
+              }
+            }
+          }}
         />
-        {isPlayerInALobby(lobby.id) && <IconButton 
-          aria-label="exit"
-          size="small"
-          onClick={() => leaveLobby(lobby.id)}
-        >
-          <CloseIcon fontSize="inherit" />
-        </IconButton>}
+        <div className={styles.usernameButtonContainer}>
+          {isPlayerInALobby(lobby.id) && !isEditing && <IconButton 
+            aria-label="exit"
+            size="small"
+            onClick={() => leaveLobby(lobby.id)}
+          >
+            <CloseIcon fontSize="inherit" />
+          </IconButton>}
+          {isEditing && <IconButton 
+            aria-label="submit"
+            size="small"
+            onClick={() => {
+              if (document.activeElement instanceof HTMLElement) {
+                document.activeElement.blur()
+              }
+            }}
+          >
+            <CheckRoundedIcon fontSize="inherit" />
+          </IconButton>}
+        </div>
       </div>
     </div>
   } else {
