@@ -9,6 +9,7 @@ import { isMobile } from 'react-device-detect'
 
 interface DiceProps {
   diceValue: number | undefined
+  itsMyTurn: boolean
   activePlayerColor: PlayerColor | undefined
   gameState: GameState | undefined
   nextMoveTime?: EpochTimeStamp
@@ -23,6 +24,7 @@ const formatCountdown = (c: number) => {
 
 export const DiceRoller = ({ 
   diceValue, 
+  itsMyTurn, 
   activePlayerColor,
   gameState,
   nextMoveTime,
@@ -60,8 +62,7 @@ export const DiceRoller = ({
 
   const showCountdown = nextMoveTime > new Date().getTime() && !!countdown
 
-  const disableDice = showCountdown || gameState != 'ROLL_DICE'
-
+  const disableDice = showCountdown || gameState != 'ROLL_DICE' || !itsMyTurn
 
   return (
     <div className={`${styles.container}`} style={{ pointerEvents: disableDice ? 'none' : 'all' }}>

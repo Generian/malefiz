@@ -1,4 +1,4 @@
-import { IconButton, Paper } from "@mui/material"
+import { IconButton, Menu, MenuItem, Paper } from "@mui/material"
 import { useEffect, useState } from "react"
 import { activeColors, PlayerColor } from "src/game/resources/playerColors"
 import { Lobby, Player } from "src/pages"
@@ -14,6 +14,8 @@ interface LobbyCompProps {
   handleChangePlayerColor: (lobbyId: string, color?: PlayerColor) => void
   handleUsernameChange: (lobbyId: string, newUsername: string) => void
   joinLobby: (lobbyId: string, color: PlayerColor) => void
+  addBot: (lobbyId: string, color: PlayerColor) => void
+  removeBot: (lobbyId: string, color: PlayerColor) => void
   leaveLobby: (lobbyId: string) => void
   startMultiplayerGame: (lobbyId: string, gameType: GameType, cooldown: number) => void
   isPlayerInALobby: (lobbyId?: string) => boolean
@@ -21,11 +23,20 @@ interface LobbyCompProps {
 }
 
 interface PlayerPlaceholderProps {
-  p: Player, 
-  lobby: Lobby,
-  handleInputConfirm: (e: string) => void, 
-  isPlayerInALobby: (lobbyId: string) => boolean, 
+  p: Player
+  lobby: Lobby
+  handleInputConfirm: (e: string) => void
+  isPlayerInALobby: (lobbyId: string) => boolean
   leaveLobby: (lobbyId: string) => void
+  removeBot: (lobbyId: string, color: PlayerColor) => void
+}
+
+interface EmptyPlayerPlaceholderProps {
+  lobby: Lobby
+  color: PlayerColor
+  enterPlace: () => void
+  addBot: (lobbyId: string, color: PlayerColor) => void
+  isPlayerInALobby: (lobbyId: string) => boolean
 }
 
 const ColorIndicator = ({ color, active }: {color: PlayerColor, active: boolean}) => {
@@ -35,11 +46,74 @@ const ColorIndicator = ({ color, active }: {color: PlayerColor, active: boolean}
   </div>
 }
 
-const EmptyPlayerPlaceholder = ({ color, onClick }: {color: PlayerColor, onClick: () => void}) => {
-  return <div className={`${styles.player} ${styles.clickable}`} onClick={onClick}>
-    <ColorIndicator color={color} active={false} />
-    <span className={styles.placeholderText} title='Click to switch to this slot.'>No player yet.</span>
-  </div>
+const EmptyPlayerPlaceholder = ({ 
+  lobby, 
+  color, 
+  enterPlace,
+  addBot,
+  isPlayerInALobby
+}: EmptyPlayerPlaceholderProps) => {
+  const [contextMenu, setContextMenu] = React.useState<{
+    mouseX: number
+    mouseY: number
+  } | null>(null)
+
+  const handleContextMenu = (event: React.MouseEvent) => {
+    event.preventDefault()
+    setContextMenu(
+      contextMenu === null
+        ? {
+            mouseX: event.clientX + 2,
+            mouseY: event.clientY - 6,
+          }
+        : null,
+    )
+  }
+
+  const handleClose = () => {
+    setContextMenu(null)
+  }
+
+  return (
+    <>
+      <div 
+        className={`${styles.player} ${styles.clickable}`} 
+        onClick={e => {
+          if (isPlayerInALobby(lobby.id)) {
+            handleContextMenu(e)
+          } else {
+            enterPlace()
+          }
+        }}
+      >
+        <ColorIndicator color={color} active={false} />
+        <span className={styles.placeholderText} title='Click to switch to this slot.'>No player yet.</span>
+      </div>
+      <Menu
+        open={contextMenu !== null}
+        onClose={handleClose}
+        anchorReference="anchorPosition"
+        anchorPosition={
+          contextMenu !== null
+            ? { top: contextMenu.mouseY, left: contextMenu.mouseX }
+            : undefined
+        }
+      >
+        <MenuItem onClick={() => {
+          enterPlace()
+          handleClose()
+        }}>
+          {`Play as ${color.toLowerCase()}`}
+        </MenuItem>
+        <MenuItem onClick={() => {
+          addBot(lobby.id, color)
+          handleClose()
+        }}>
+          Add bot
+        </MenuItem>
+      </Menu>
+    </>
+  )
 }
 
 const PlayerPlaceholder = ({ 
@@ -47,15 +121,16 @@ const PlayerPlaceholder = ({
   lobby,
   handleInputConfirm, 
   isPlayerInALobby, 
-  leaveLobby 
+  leaveLobby,
+  removeBot
 }: PlayerPlaceholderProps ) => {
   const [isEditing, setIsEditing] = useState(false)
 
-  if (p.uuid == getUuid()) {
+  if (p.uuid == getUuid() || p.isBot) {
     return <div key={p.uuid} className={styles.player}>
       <ColorIndicator color={p.color} active={true} />
       <div className={styles.usernameContainer}>
-        <input
+        {!p.isBot && <input
           className={`${styles.usernameInput}`}
           defaultValue={p.username}
           onFocus={e => {
@@ -78,12 +153,19 @@ const PlayerPlaceholder = ({
               }
             }
           }}
-        />
+        />}
+        {p.isBot && <span className={styles.botName}>{p.username}</span>}
         <div className={styles.usernameButtonContainer}>
           {isPlayerInALobby(lobby.id) && !isEditing && <IconButton 
             aria-label="exit"
             size="small"
-            onClick={() => leaveLobby(lobby.id)}
+            onClick={() => {
+              if (p.isBot) {
+                removeBot(lobby.id, p.color)
+              } else {
+                leaveLobby(lobby.id)
+              }
+            }}
           >
             <CloseIcon fontSize="inherit" />
           </IconButton>}
@@ -118,7 +200,9 @@ export const LobbyComp = ({
   lobby, 
   handleChangePlayerColor, 
   handleUsernameChange, 
-  joinLobby, 
+  joinLobby,
+  addBot,
+  removeBot,
   leaveLobby, 
   startMultiplayerGame, 
   isPlayerInALobby,
@@ -150,8 +234,6 @@ export const LobbyComp = ({
     }
   }
 
-  
-
   return (
     <Paper className={styles.container} elevation={3}>
       <span className={styles.subTitle}>Lobby</span>
@@ -181,15 +263,24 @@ export const LobbyComp = ({
             handleInputConfirm={handleInputConfirm}
             isPlayerInALobby={isPlayerInALobby}
             leaveLobby={leaveLobby}
+            removeBot={removeBot}
           />
         } else {
-          return <EmptyPlayerPlaceholder key={`${lobby.id}_${c.color}`} color={c.color} onClick={isPlayerInALobby(lobby.id) ? () => handleChangePlayerColor(lobby.id, c.color) : () => joinLobby(lobby.id, c.color)}/>
+          return <EmptyPlayerPlaceholder 
+            key={`${lobby.id}_${c.color}`} 
+            lobby={lobby}
+            color={c.color} 
+            enterPlace={isPlayerInALobby(lobby.id) ? () => handleChangePlayerColor(lobby.id, c.color) : () => joinLobby(lobby.id, c.color)}
+            addBot={addBot}
+            isPlayerInALobby={isPlayerInALobby}
+          />
         }
       })}
       {<button
         onClick={() => startMultiplayerGame(lobby.id, gameType, cooldown)}
         className={`button primary`}
         disabled={!(lobby.players.length >= 2 && isPlayerInALobby(lobby.id))}
+        title={!isPlayerInALobby(lobby.id) ? "You're not a member of this lobby." : lobby.players.length < 2 ? 'Not enough players. Add at least one more.' : ''}
       >
         Start Game
       </button>}

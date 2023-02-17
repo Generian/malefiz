@@ -24,6 +24,7 @@ export interface PublicPlayer {
   gameState?: GameState
   diceValue?: number
   online?: boolean
+  isBot?: boolean
 }
 
 export interface Lobby {
@@ -92,6 +93,18 @@ export default function Home() {
   const joinLobby = (lobbyId: string, color: PlayerColor) => {
     if (!isPlayerInALobby() && lobbies.filter(l => l.id == lobbyId)[0]?.players?.length < 4) {
       socket.emit('joinLobby', lobbyId, color, getUuid())
+    }
+  }
+
+  const addBot = (lobbyId: string, color: PlayerColor) => {
+    if (lobbies.filter(l => l.id == lobbyId)[0]?.players.filter(p => p.uuid == getUuid())[0]) {
+      socket.emit('addBotToLobby', lobbyId, color, getUuid())
+    }
+  }
+
+  const removeBot = (lobbyId: string, color: PlayerColor) => {
+    if (lobbies.filter(l => l.id == lobbyId)[0]?.players.filter(p => p.uuid == getUuid())[0]) {
+      socket.emit('removeBotFromLobby', lobbyId, color, getUuid())
     }
   }
 
@@ -164,6 +177,8 @@ export default function Home() {
                   handleChangePlayerColor={handleChangePlayerColor}
                   handleUsernameChange={handleUsernameChange}
                   joinLobby={joinLobby}
+                  addBot={addBot}
+                  removeBot={removeBot}
                   leaveLobby={leaveLobby}
                   startMultiplayerGame={startMultiplayerGame}
                   isPlayerInALobby={isPlayerInALobby}

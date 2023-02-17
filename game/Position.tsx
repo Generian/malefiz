@@ -5,6 +5,7 @@ import { Pos, positions } from './resources/positions'
 import { BORDER, REM } from './resources/styles'
 import { isMobile } from 'react-device-detect'
 import { Piece } from './resources/gameTypes'
+import { getShortestPathsToFinish } from './resources/routing'
 
 interface PositionProps {
   id: number,
@@ -19,6 +20,8 @@ interface PositionProps {
   pieceSize: number
   activePiece?: Piece
 }
+
+// const shortestPaths = getShortestPathsToFinish()
 
 export interface Coord {
   x: number
@@ -91,9 +94,10 @@ export const Position = ({ id, blocked, tempBlock, pendingMove, children, highli
         {children}
         {blocked && <BlockMarker pieceSize={pieceSize}/>}
         {tempBlock && !blocked && <BlockMarker pieceSize={pieceSize} pending={true}/>}
-        {debugMode && <div>
+        {debugMode && <div className={styles.debug}>
           <p>{position.id}</p>
-          <p>{position.connections}</p>
+          {/* <p>{shortestPaths[position.id]}</p> */}
+          {/* <p>{position.connections}</p> */}
         </div>}
       </div>
     </div>

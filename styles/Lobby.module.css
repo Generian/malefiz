@@ -38,6 +38,7 @@
   border-radius: 0.7rem;
   box-sizing: border-box;
   border: 0.25rem solid transparent;
+  pointer-events: none;
 }
 
 .active {

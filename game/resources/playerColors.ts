@@ -1,6 +1,11 @@
-import { PublicPlayer } from "src/pages"
-
 export type PlayerColor = 'RED' | 'GREEN' | 'YELLOW' | 'BLUE'
+
+export const botNames = {
+  GREEN: "Jasmine",
+  YELLOW: "Betty",
+  RED: "Clint",
+  BLUE: "Professor Isaac"
+}
 
 export const activeColors = (red: boolean = true, green: boolean = true, yellow: boolean = true, blue: boolean = true) => {
   const colors: PlayerColor[] = []

@@ -1,5 +1,6 @@
 import { Player } from "src/pages"
 import { Game } from "src/pages/api/socket"
+import { getBlockMoveOptions } from "./gameState"
 import { GameState, GameType, Piece } from "./gameTypes"
 import { nextPlayerColor, PlayerColor } from "./playerColors"
 import { defaultBlocks, getNewPiecePositions, getResetPiecePosition, initialisePieces, positions, winningPosId } from "./positions"
@@ -182,12 +183,7 @@ export const validateGameUpdate = ({ game, color, action }: GameUpdate) => {
             break
 
           case 'MOVE_BLOCK':
-            const blockMoveOptions = positions
-              .filter(p => p.y > 1) // Filter out first rows
-              .filter(p => p.y < Math.max(...positions.map(p => p.y))) // Filter out winning row
-              .map(p => p.id)
-              .filter(p => !game.blocks.includes(p)) // Filter for blocks
-              .filter(p => !game.pieces.map(p => p.pos).includes(p)) // Filter out positions with players
+            const blockMoveOptions = getBlockMoveOptions(newGame)
 
             if (blockMoveOptions.includes(action.newPositionId)) {
               newGame.blocks = [...newGame.blocks, action.newPositionId]

@@ -6,8 +6,8 @@ export const getAvailableMovePaths = (
   playerPos: number,
   playerColor: PlayerColor | undefined,
   steps: number | undefined,
-  blocks: number[],
-  pieces: Piece[],
+  blocks: number[] = [],
+  pieces: Piece[] = [],
 ) => {
   if (!steps || !playerColor) return []
   let remainingSteps = steps
@@ -38,4 +38,37 @@ export const getAvailableMovePaths = (
   }
 
   return paths
+}
+
+export const getShortestPathsToFinish = () => {
+  const finish = positions.filter(p => p.type == 'FINISH')[0]
+
+  const shortestPaths: { [key: number]: number } = {}
+
+  shortestPaths[finish.id] = -1
+
+  let allPositionsCovered = false
+  let steps = 1
+
+  while (!allPositionsCovered) {
+    getAvailableMovePaths(finish.id, 'RED', steps).forEach(p => {
+      const finalPos = p[p.length - 1]
+      if (!shortestPaths[finalPos]) {
+        shortestPaths[finalPos] = steps
+      }
+    })
+
+    // check if all positions are covered
+    let positionsMissed = 0
+    positions.filter(p => p.y >= 1 && p.y < finish.y).forEach(p => {
+      if (!shortestPaths[p.id]) {
+        positionsMissed += 1
+      }
+    })
+    allPositionsCovered = positionsMissed == 0
+
+    // Increment steps
+    steps += 1
+  }
+  return shortestPaths
 }

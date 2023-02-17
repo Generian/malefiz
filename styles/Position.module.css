@@ -12,9 +12,15 @@
   position: absolute;
 }
 
-.default div p {
+.debug {
+  position: absolute;
+  z-index: 1000;
+}
+
+.debug p {
   font-size: small;
-  color: red;
+  color: lightgreen;
+  line-height: 0.3rem;
 }
 
 .highlightMovePosition {

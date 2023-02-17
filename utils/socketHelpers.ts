@@ -18,6 +18,8 @@ export interface ClientToServerEvents {
   createLobby: (uuid: string) => void
   changeLobbySettings: (uuid: string, lobbyId: string, gameType: GameType, cooldown: number) => void
   joinLobby: (lobbyId: string, color: PlayerColor, uuid: string) => void
+  addBotToLobby: (lobbyId: string, color: PlayerColor, uuid: string) => void
+  removeBotFromLobby: (lobbyId: string, color: PlayerColor, uuid: string) => void
   leaveLobby: (lobbyId: string, uuid: string) => void
   startGame: (lobbyId: string, uuid: string, restart?: boolean) => void
   updateUsername: (userName: string, uuid: string, lobbyId?: string) => void

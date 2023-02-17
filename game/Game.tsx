@@ -56,7 +56,7 @@ export const GameComp = () => {
   const [isGameOver, setIsGameOver] = useState(false)
 
   useKeypress('Enter', () => {
-    playerRolledDice()
+    itsMyTurn() && playerRolledDice()
   })
 
   useEffect(() => {
@@ -181,6 +181,29 @@ export const GameComp = () => {
 
   const getActivePlayerGameState = () => {
     return getActivePlayer()?.gameState
+  }
+
+  const itsMyTurn = () => {
+    let myTurn = false
+
+    if (myColor) {
+      const player = getActivePlayer()
+      if (!player) return myTurn
+
+      if (gameType == 'COMPETITION') {
+        if (player.nextMoveTime) {
+          myTurn = player.color == myColor && player.nextMoveTime <= new Date().getTime()
+        } else {
+          myTurn = player.color == myColor
+        }
+      } else {
+        myTurn = player.color == myColor
+      }
+    } else {
+      myTurn = true
+    }
+
+    return myTurn
   }
 
   // Initialise local game
@@ -410,6 +433,7 @@ export const GameComp = () => {
           }
           dice={!isGameOver && <DiceRoller
             diceValue = {diceValue}
+            itsMyTurn = {itsMyTurn()}
             activePlayerColor={getActivePlayer()?.color}
             gameState = {getActivePlayer()?.gameState}
             nextMoveTime={getActivePlayer()?.nextMoveTime}

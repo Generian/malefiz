@@ -10,7 +10,7 @@ interface PlayerOnlineStateProps {
   players: Player[]
 }
 
-export const PlayerOnlineState = ({ players }:PlayerOnlineStateProps) => {
+export const PlayerOnlineState = ({ players }: PlayerOnlineStateProps) => {
   return (
     <div className={styles.container}>
       {players.map(p => <div 
