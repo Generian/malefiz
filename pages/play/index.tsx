@@ -1,4 +1,3 @@
-import Head from 'next/head'
 import PageFrame from 'src/components/PageFrame'
 import { GameComp } from 'src/game/Game'
 

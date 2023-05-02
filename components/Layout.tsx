@@ -21,7 +21,7 @@ export const getSquareSize = ({width, height}: WindowSize) => {
       if (minDim < MAX_BOARD_SIZE) {
         boardSize = minDim
       }
-      if (width > height - INFO_PANEL_WIDTH) {
+      if (width > height - 125) {
         overlayMode = true
       }
     }

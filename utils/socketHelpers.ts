@@ -15,9 +15,9 @@ export interface ServerToClientEvents {
 
 export interface ClientToServerEvents {
   requestUuid: (lid: string | undefined, uuid: string | undefined, callback: (uuid: string, gameValidityData: GameValidityData) => void) => void
-  createLobby: (uuid: string) => void
+  createLobby: (uuid: string, callback: (lid: string) => void) => void
   changeLobbySettings: (uuid: string, lobbyId: string, gameType: GameType, cooldown: number) => void
-  joinLobby: (lobbyId: string, color: PlayerColor, uuid: string) => void
+  joinLobby: (lobbyId: string, color: PlayerColor | undefined, uuid: string) => void
   addBotToLobby: (lobbyId: string, color: PlayerColor, uuid: string) => void
   removeBotFromLobby: (lobbyId: string, color: PlayerColor, uuid: string) => void
   leaveLobby: (lobbyId: string, uuid: string) => void

@@ -48,6 +48,15 @@
   align-items: center;
   box-sizing: border-box;
   width: 100%;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.containerEmptyState {
+  display: flex;
+  flex-direction: column;
+  gap: 3rem;
+  width: 100%;
 }
 
 .bottomContainer {
@@ -64,6 +73,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  cursor: pointer;
 }
 
 .titleImage {
@@ -84,4 +94,28 @@
 .outline {
   box-shadow: 0 0 0 -1px var(--background);
   text-shadow: -2px -2px 0 var(--background), 2px -2px 0 var(--background), -2px 2px 0 var(--background), 2px 2px 0 var(--background);
+}
+
+.description {
+  box-shadow: rgba(50, 50, 93, 0.25) 0px 3px 6px -2px, rgba(0, 0, 0, 0.3) 0px 3px 7px -3px;
+  border-radius: 0.5rem;
+  border-width: 2px;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.description p {
+  margin: 0;
+}
+
+.emptyText {
+  text-align: center;
+}
+
+.buttonOverlay {
+  width: 1rem;
+  height: 1rem;
+  background-color: brown;
 }

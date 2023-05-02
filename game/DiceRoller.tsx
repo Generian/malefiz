@@ -74,7 +74,7 @@ export const DiceRoller = ({
       {<div className={`${styles.diceHider} ${showCountdown ? styles.hide : ''}`}>
         <span className={`${styles.countdown} ${countdown && countdown < 2000 ? styles.imminent : ''}`}>{countdown && formatCountdown(countdown)}</span>
       </div>}
-      {!disableDice && diceValue && <div className={`${styles.CTA} ${styles.bounce}`}>
+      {!disableDice && diceValue && <div id="bounce" className={`${styles.CTA} ${styles.bounce}`}>
         <ArrowUpwardRoundedIcon/>
         <span className={`${styles.CTA_text} ${activePlayerColor}`}>ROLL DICE!</span>
       </div>}

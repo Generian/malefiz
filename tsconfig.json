@@ -30,6 +30,9 @@
       "api/*": [
         "./pages/api/*"
       ],
+      "public/*": [
+        "./public/*"
+      ],
     }
   },
   "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx"],

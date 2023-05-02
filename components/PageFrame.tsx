@@ -15,6 +15,7 @@ export default function PageFrame({ children, title, noZoom = false }: PageFrame
         {!noZoom && <meta name="viewport" content="width=device-width, initial-scale=1" />}
         {noZoom && <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0" />}
         <link rel="icon" href="/favicon.ico" />
+        <script id="Cookiebot" src="https://consent.cookiebot.com/uc.js" data-cbid="8bfe88c6-fdaf-41f1-a309-756278ef2be8" data-blockingmode="auto" type="text/javascript"></script>
       </Head>
       <main>
         {children}

@@ -1,4 +1,4 @@
-import { IconButton, Menu, MenuItem, Paper } from "@mui/material"
+import { Card, CardActionArea, IconButton, Menu, MenuItem, Paper } from "@mui/material"
 import { useEffect, useState } from "react"
 import { activeColors, PlayerColor } from "src/game/resources/playerColors"
 import { Lobby, Player } from "src/pages"
@@ -20,6 +20,11 @@ interface LobbyCompProps {
   startMultiplayerGame: (lobbyId: string, gameType: GameType, cooldown: number) => void
   isPlayerInALobby: (lobbyId?: string) => boolean
   updateLobbySettings: (lobbyId: string, gameType: GameType, cooldown: number) => void
+}
+
+interface LobbyCardProps {
+  lobby: Lobby
+  handleClick: () => void
 }
 
 interface PlayerPlaceholderProps {
@@ -235,7 +240,10 @@ export const LobbyComp = ({
   }
 
   return (
-    <Paper className={styles.container} elevation={3}>
+    <Paper 
+      className={styles.container} 
+      elevation={3}
+    >
       <span className={styles.subTitle}>Lobby</span>
       <span className={styles.lobbyId}>{lobby.id}</span>
       <div className={styles.settings} style={{ pointerEvents: isPlayerInALobby(lobby.id) ? 'all' : 'none' }}>
@@ -285,5 +293,68 @@ export const LobbyComp = ({
         Start Game
       </button>}
     </Paper>
+  )
+}
+
+export const LobbyCard = ({
+  lobby,
+  handleClick
+}: LobbyCardProps) => {
+  return (
+    <div className={styles.cardContainerParent} >
+
+    <Card
+      style={{width:'100%'}}
+      onClick={handleClick}
+    >
+      <CardActionArea>
+        <div className={styles.cardContainer}>
+        <span className={styles.subTitle}>Lobby</span>
+        <span className={styles.lobbyId}>{lobby.id}</span>
+        <div className={styles.settings}>
+          <div className={`${styles.settingsModeContainer} ${styles.hidden}`}>
+            <span className={`text_span_small ${styles.subTitle}`}>Game Mode</span>
+            <div className={styles.buttonContainer}>
+              <button 
+                className={`button small`}
+              >
+                {lobby.gameType == 'NORMAL' ? 'Normal' : 'Competition'}
+              </button>
+            </div>
+          </div>
+          <div className={`${styles.settingsModeContainer} ${styles.settingsCooldownContainer} ${lobby.gameType == 'NORMAL' ? styles.hidden : ''}`}>
+            <span className={`text_span_small ${styles.subTitle}`}>Cooldown</span>
+            <div className={styles.buttonContainer}>
+              <button className={`button small`}>{lobby.cooldown}</button>
+            </div>
+          </div>
+        </div>
+        {activeColors().map(c => {
+          const player = lobby.players.filter(p => p.color == c.color)[0]
+          if (player) {
+            return <PlayerPlaceholder 
+              key={`${lobby.id}_${c.color}`} 
+              p={player}
+              lobby={lobby}
+              handleInputConfirm={() => {}}
+              isPlayerInALobby={() => false}
+              leaveLobby={() => {}}
+              removeBot={() => {}}
+            />
+          } else {
+            return <EmptyPlayerPlaceholder 
+              key={`${lobby.id}_${c.color}`} 
+              lobby={lobby}
+              color={c.color} 
+              enterPlace={() => {}}
+              addBot={() => {}}
+              isPlayerInALobby={() => false}
+            />
+          }
+        })}
+        </div>
+      </CardActionArea>
+    </Card>
+    </div>
   )
 }

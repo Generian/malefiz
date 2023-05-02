@@ -274,12 +274,14 @@ const SocketHandler = (_: NextApiRequest, res: NextApiResponseWithSocket) => {
       })
 
       // Lobbies handling
-      socket.on('createLobby', uuid => {
+      socket.on('createLobby', (uuid, callback) => {
         const player = users[uuid]
         if (!player) return
 
+        const lid = createLobbyId()
+
         lobbies.push({
-          id: createLobbyId(),
+          id: lid,
           gameType: 'NORMAL',
           cooldown: 5,
           players: [{
@@ -290,6 +292,7 @@ const SocketHandler = (_: NextApiRequest, res: NextApiResponseWithSocket) => {
           }]
         })
         io.emit('updateLobbies', lobbies)
+        callback(lid)
       })
 
       socket.on('changeLobbySettings', (uuid: string, lobbyId: string, gameType: GameType, cooldown: number) => {
@@ -306,23 +309,26 @@ const SocketHandler = (_: NextApiRequest, res: NextApiResponseWithSocket) => {
         }
       })
 
-      socket.on('joinLobby', (lobbyId: string, color: PlayerColor, uuid: string) => {
+      socket.on('joinLobby', (lobbyId: string, color: PlayerColor | undefined, uuid: string) => {
         let newLobby = getLobbyById(lobbyId)
         const player = users[uuid]
 
-        if (newLobby && newLobby.players.length < 4 && getFreeColors(lobbyId).includes(color) && player) {
-          // Add player
-          newLobby.players = [...newLobby.players, {
-            uuid: uuid,
-            username: getNewLobbyUsername(uuid, lobbyId),
-            color: color,
-            online: player.online
-          }]
+        if (newLobby && newLobby.players.length < 4) {
+          const freeColors = getFreeColors(lobbyId)
+          if ((!color || freeColors.includes(color)) && player) {
+            // Add player
+            newLobby.players = [...newLobby.players, {
+              uuid: uuid,
+              username: getNewLobbyUsername(uuid, lobbyId),
+              color: !color ? freeColors[0] : color,
+              online: player.online
+            }]
 
-          // Update lobbies
-          updateLobbyInLobbies(newLobby)
+            // Update lobbies
+            updateLobbyInLobbies(newLobby)
 
-          io.emit('updateLobbies', lobbies)
+            io.emit('updateLobbies', lobbies)
+          }
         }
       })
 
@@ -348,6 +354,10 @@ const SocketHandler = (_: NextApiRequest, res: NextApiResponseWithSocket) => {
 
       socket.on('leaveLobby', (lobbyId: string, uuid: string) => {
         let newLobby = getLobbyById(lobbyId)
+
+        if (!lobbyId) {
+          newLobby = lobbies.find(l => l.players.find(p => p.uuid == uuid))
+        }
 
         if (newLobby) {
           // Remove player

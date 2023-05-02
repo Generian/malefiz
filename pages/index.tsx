@@ -37,106 +37,7 @@ export interface Lobby {
 let socket: Socket<ServerToClientEvents, ClientToServerEvents>
 
 export default function Home() {
-  const [lobbies, setLobbies] = useState<Lobby[]>([])
-  const [games, setGames] = useState<Game[]>([])
-
   const router = useRouter()
-
-  useEffect(() => {socketInitializer()}, [])
-
-  const socketInitializer = async () => {
-    await fetch('/api/socket')
-    socket = io()
-
-    socket.on('connect', () => {
-      console.log('connected', socket.id)
-      socket.emit('requestUuid', undefined, getUuid(), (newUuid, gameValidityData) => {
-        handleNewUuid(newUuid)
-      })
-    })
-
-    // socket.on('receiveUuid', newUuid => {
-    //   const uuid = getUuid()
-
-    //   // Handle new UUID
-    //   if (newUuid == uuid) {
-    //     console.log("Expected case. No cookie update needed. Uuid:", uuid)
-    //   } else if (!uuid) {
-    //     console.log("No uuid set yet. Saving new uuid in cookie:", newUuid)
-    //     document.cookie = `uuid=${newUuid}; expires=${new Date(new Date().getTime()+60*60*1000*24).toUTCString()}`
-    //   } else {
-    //     console.error("Received a mismatching uuid. Unexpected error.")
-    //   }
-    // })
-
-    socket.on('updateLobbies', (lobbies, games) => {
-      console.log("Lobbies update:", lobbies)
-      setLobbies(lobbies)
-      games && setGames(games)
-    })
-
-    socket.on('startGame', (lobbyId, uuids) => {
-      if (uuids.includes(getUuid())) {
-        router.push(`/play?lid=${lobbyId}`)
-      }
-    })
-  }
-
-  const createLobby = () => {
-    socket.emit('createLobby', getUuid())
-  }
-
-  const updateLobbySettings = (lobbyId: string, gameType: GameType, cooldown: number) => {
-    socket.emit('changeLobbySettings', getUuid(), lobbyId, gameType, cooldown)
-  }
-
-  const joinLobby = (lobbyId: string, color: PlayerColor) => {
-    if (!isPlayerInALobby() && lobbies.filter(l => l.id == lobbyId)[0]?.players?.length < 4) {
-      socket.emit('joinLobby', lobbyId, color, getUuid())
-    }
-  }
-
-  const addBot = (lobbyId: string, color: PlayerColor) => {
-    if (lobbies.filter(l => l.id == lobbyId)[0]?.players.filter(p => p.uuid == getUuid())[0]) {
-      socket.emit('addBotToLobby', lobbyId, color, getUuid())
-    }
-  }
-
-  const removeBot = (lobbyId: string, color: PlayerColor) => {
-    if (lobbies.filter(l => l.id == lobbyId)[0]?.players.filter(p => p.uuid == getUuid())[0]) {
-      socket.emit('removeBotFromLobby', lobbyId, color, getUuid())
-    }
-  }
-
-  const leaveLobby = (lobbyId: string) => {
-    socket.emit('leaveLobby', lobbyId, getUuid())
-  }
-
-  const handleUsernameChange = (lobbyId: string, newUsername: string) => {
-    socket.emit('updateUsername', newUsername, getUuid(), lobbyId)
-  }
-
-  const handleChangePlayerColor = (lobbyId: string, color?: PlayerColor) => {
-    socket.emit('changePlayerColor', lobbyId, color, getUuid())
-  }
-
-  const isPlayerInALobby = (lobbyId?: string) => {
-    let filteredLobbies = lobbies
-    if (lobbyId) {
-      filteredLobbies = filteredLobbies.filter(l => l.id == lobbyId)
-    }
-    const allPlayers = filteredLobbies.map(l => l.players).map(p => p.map(p => p.uuid)).flat()
-    return allPlayers.includes(getUuid())
-  }
-
-  const startSingleplayerGame = () => {
-    lobbies.filter(l => l.players.map(p => p.uuid).includes(getUuid())).forEach(l => leaveLobby(l.id))
-    router.push('/play')
-  }
-
-  const startMultiplayerGame = (lobbyId: string) => {
-    socket.emit('startGame', lobbyId, getUuid())
-  }
   
   return (
     <PageFrame>
@@ -158,50 +59,20 @@ export default function Home() {
           <div className={styles.container_l2}>
             <button
               className={`button primaryAlert large marginBottom`}
-              onClick={startSingleplayerGame} 
+              onClick={() => router.push('/lobby')} 
             >
-              Quick Game
+              Play
             </button>
-            {!lobbies.length && <button 
-              className={`button secondary large marginBottom`}
-              onClick={createLobby}
-            >
-              Create Lobby
-            </button>}
-            {lobbies.length > 0 && <h2 className={`text_h2 ${styles.outline}`}>LOBBIES</h2>}
-            <div className={styles.container_l3}>
-              <div className={styles.container_l4}>
-                {lobbies.map(l => <LobbyComp 
-                  key={l.id}
-                  lobby={l}
-                  handleChangePlayerColor={handleChangePlayerColor}
-                  handleUsernameChange={handleUsernameChange}
-                  joinLobby={joinLobby}
-                  addBot={addBot}
-                  removeBot={removeBot}
-                  leaveLobby={leaveLobby}
-                  startMultiplayerGame={startMultiplayerGame}
-                  isPlayerInALobby={isPlayerInALobby}
-                  updateLobbySettings={updateLobbySettings}
-                />)}
-              </div>
-              {(!isPlayerInALobby() && lobbies.length > 0) && <div className={styles.bottomContainer}><button 
-                className={`button secondary marginBottom`}
-                onClick={createLobby}
-              >
-                Create Lobby
-              </button></div>}
+            <div className={`${styles.description} secondary`}>
+              <h2 className='font text_h2 center'>About Malefiz</h2>
+              <p>Malefiz is a popular German board game that was first published in 1960 by the German company Ravensburger. The game is also known as Barricade or Barricade-Ludo in some countries. Malefiz is a strategic game that involves players trying to move their pawns from the start position to the home position while trying to block their opponents' pawns.</p>
+
+              <p>The gameplay of Malefiz involves a lot of strategy and tactical thinking as players must decide whether to advance their own pawns or block their opponents' pawns. The game is known for its simplicity, yet depth of strategy, making it popular among both children and adults.</p>
+
+              <p>Malefiz was created by Werner Schöppner, a German game designer who was inspired by an earlier game called Pachisi. Pachisi is a traditional Indian board game that also involves moving pawns around a board while trying to block opponents' pawns. Schöppner adapted the basic gameplay of Pachisi to create Malefiz, adding a few new elements such as barricades to make the game more challenging and engaging.</p>
+
+              <p>Since its release, Malefiz has become a classic board game in Germany and is enjoyed by players of all ages. The game has also been translated into several different languages and is popular in many other countries around the world.</p>
             </div>
-            {/* <Paper>
-              <div className={styles.container_l3}>
-                <Typography variant="h4">
-                  Games
-                </Typography>
-                {games?.map((g, i) => <div key={g.lobbyId}>
-                  <span onClick={() => router.push(`/play?lid=${g.lobbyId}`)}>Game {i + 1}</span>
-                </div>)}
-              </div>
-            </Paper> */}
           </div>
         </div>
       </div>

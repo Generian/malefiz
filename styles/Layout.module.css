@@ -42,7 +42,7 @@
 .square {
   display: block;
   box-sizing: border-box;
-  overflow: scroll;
+  overflow: auto;
 }
 
 .instructionsContainer {
@@ -51,7 +51,7 @@
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  overflow-y: hidden;
+  overflow: hidden;
 }
 
 .portrait .instructionsContainer {
@@ -102,5 +102,11 @@
   right: 0;
   pointer-events: none;
   z-index: 5;
+}
+
+@media only screen and (max-width: 600px) {
+  .menu {
+    padding: 0;
+  }  
 }
 

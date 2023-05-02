@@ -39,6 +39,18 @@ declare module '@mui/material/styles' {
 }
 
 export const theme = createTheme({
+  typography: {
+    fontFamily: [
+      '"Segoe UI"',
+      'Roboto',
+      '"Helvetica Neue"',
+      'Arial',
+      'sans-serif',
+      '"Apple Color Emoji"',
+      '"Segoe UI Emoji"',
+      '"Segoe UI Symbol"',
+    ].join(','),
+  },
   status: {
     danger: '#e53e3e',
   },

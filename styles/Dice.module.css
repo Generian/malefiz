@@ -141,3 +141,35 @@
   border-radius: 100%;
   background-color: var(--black);
 }
+
+@media only screen and (max-width: 600px) {
+  .cubeScene {
+    width: 60px;
+    height: 60px;
+    margin: 2rem;
+  }
+
+  .cube.show-1 { transform: translateZ(-30px) rotateY(   0deg); }
+  .cube.show-2 { transform: translateZ(-30px) rotateY( -90deg); }
+  .cube.show-6 { transform: translateZ(-30px) rotateY(-180deg); }
+  .cube.show-5 { transform: translateZ(-30px) rotateY(  90deg); }
+  .cube.show-3 { transform: translateZ(-30px) rotateX( -90deg); }
+  .cube.show-4 { transform: translateZ(-30px) rotateX(  90deg); }
+
+  .cube__face__1 { transform: rotateY(  0deg) translateZ(30px); }
+  .cube__face__2 { transform: rotateY( 90deg) translateZ(30px); }
+  .cube__face__6 { transform: rotateY(180deg) translateZ(30px); }
+  .cube__face__5 { transform: rotateY(-90deg) translateZ(30px); }
+  .cube__face__3 { transform: rotateX( 90deg) translateZ(30px); }
+  .cube__face__4 { transform: rotateX(-90deg) translateZ(30px); }
+
+  .diceHider {
+    width: 64px;
+    height: 64px;
+    margin: calc(2rem - 2px);
+  }
+
+  .CTA {
+    visibility: hidden;
+  }
+}

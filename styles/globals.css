@@ -107,7 +107,8 @@ body {
 }
 
 .text_h2 {
-  margin: 1rem;
+  margin-top: 1rem;
+  margin-bottom: 1rem;
   color: var(--black);
   font-family: 'Arbutus', sans-serif;
   letter-spacing: 0.1rem;
@@ -120,4 +121,12 @@ body {
 
 .bold {
   font-weight: bold;
+}
+
+.center {
+  text-align: center;
+}
+
+.portrait_global {
+
 }
