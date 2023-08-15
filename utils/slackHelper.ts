@@ -27,7 +27,7 @@ const sendSlackMessage = async (
 
   fetch("https://slack.com/api/chat.postMessage", requestOptions)
     .then(response => response.text())
-    .then(result => console.log(result))
+    .then(result => console.log(result, requestOptions))
     .catch(error => console.log('error', error))
 }
 
