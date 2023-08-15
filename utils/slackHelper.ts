@@ -1,7 +1,5 @@
 import { resolveUrlFromEnv } from "./helper"
 
-const FormData = require('form-data')
-
 const sendSlackMessage = async (
   message: string
 ) => {
@@ -11,23 +9,27 @@ const sendSlackMessage = async (
     return
   }
 
-  const myHeaders = new Headers()
-  myHeaders.append("Authorization", `Bearer ${SLACK_API_KEY}`)
-
-  const formdata = new FormData()
-  formdata.append("channel", "C05MUM2M36W")
-  formdata.append("blocks", message)
-
-  const requestOptions: RequestInit = {
+  const requestOptions = {
     method: 'POST',
-    headers: myHeaders,
-    body: formdata,
+    headers: {
+      'authorization': `Bearer ${SLACK_API_KEY}`,
+      'content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      'channel': 'C05MUM2M36W',
+      'blocks': message
+    }),
     redirect: 'follow'
-  }
+  } as RequestInit
 
   fetch("https://slack.com/api/chat.postMessage", requestOptions)
     .then(response => response.text())
-    .then(result => console.log(result, requestOptions))
+    .then(result => JSON.parse(result))
+    .then (res => {
+      if(res.ok !== true) {
+        console.error(res)
+      }
+    })
     .catch(error => console.log('error', error))
 }
 
