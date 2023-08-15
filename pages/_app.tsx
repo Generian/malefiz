@@ -5,8 +5,6 @@ import ReactGA from 'react-ga'
 import { initGoogleAnalytics } from 'src/utils/analytics'
 import { useRouter } from 'next/router'
 import { useEffect } from 'react'
-import Script from 'next/script'
-
 
 export default function App({ Component, pageProps }: AppProps) {
   const router = useRouter()
