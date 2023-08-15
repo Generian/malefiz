@@ -31,7 +31,7 @@ export default function App({ Component, pageProps }: AppProps) {
 
   return <>
     <link href='https://fonts.googleapis.com/css?family=Arbutus' rel='stylesheet'></link>
-    <Script
+    {/* <Script
         src="https://www.googletagmanager.com/gtag/js?id=G-VX66E5NXM6"
         strategy="afterInteractive"
       />
@@ -43,7 +43,7 @@ export default function App({ Component, pageProps }: AppProps) {
 
         gtag('config', 'G-VX66E5NXM6');
       `}
-    </Script>
+    </Script> */}
     <Component {...pageProps} />
   </>
 }
