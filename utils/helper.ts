@@ -57,3 +57,13 @@ export const handleNewUuid = (newUuid: string) => {
     console.error("Received a mismatching uuid. Unexpected error.")
   }
 }
+
+export const resolveUrlFromEnv = () => {
+  const env = process.env.NODE_ENV
+  if(env == "development"){
+    return "http://localhost:3000/"
+  }
+  else if (env == "production"){
+    return "https://malefiz-online.herokuapp.com/"
+  }
+}

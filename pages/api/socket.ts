@@ -12,6 +12,7 @@ import { Action, initialiseGame, validateGameUpdate } from 'src/game/resources/g
 import { Info } from 'src/game/Infos'
 import { executeBotMove } from 'src/game/resources/botExecutor'
 import { getShortestPathsToFinish } from 'src/game/resources/routing'
+import { informSlackAbountLobbyCreation, informSlackAboutGameStart } from 'src/utils/slackHelper'
 
 interface SocketServer extends HTTPServer {
   io?: IOServer | undefined
@@ -293,6 +294,9 @@ const SocketHandler = (_: NextApiRequest, res: NextApiResponseWithSocket) => {
         })
         io.emit('updateLobbies', lobbies)
         callback(lid)
+
+        // Inform Slack channel about lobby creation
+        informSlackAbountLobbyCreation(player?.globalUsername, lid)
       })
 
       socket.on('changeLobbySettings', (uuid: string, lobbyId: string, gameType: GameType, cooldown: number) => {
@@ -481,6 +485,9 @@ const SocketHandler = (_: NextApiRequest, res: NextApiResponseWithSocket) => {
             // Update all other lobbies
             socket.broadcast.emit('updateLobbies', lobbies)
           }
+
+          // Inform Slack channel about lobby creation
+          informSlackAboutGameStart(newGame.players.map(p => p.username), lobbyId)
         }
       })
 
