@@ -30,7 +30,6 @@ export default function App({ Component, pageProps }: AppProps) {
 
   return <>
     <link href='https://fonts.googleapis.com/css?family=Arbutus' rel='stylesheet'></link>
-    <meta name="google-site-verification" content="wUHmAjX7bgZFcGc6KDRvZ6NUVWi38HBSbDgfsEBIkH8" />
     <Script
         src="https://www.googletagmanager.com/gtag/js?id=G-VX66E5NXM6"
         strategy="afterInteractive"
