@@ -420,7 +420,7 @@ export const GameComp = () => {
                 blocks, 
                 pieces)}
               blocks={blocks}
-              showBlockerCursor={getActivePlayer()?.gameState == 'MOVE_BLOCK' && !tempBlock}
+              showBlockerCursor={getActivePlayer()?.color == myColor && getActivePlayer()?.gameState == 'MOVE_BLOCK' && !tempBlock}
               activePiece={activePiece}
               tempPiece={tempPiece}
               tempBlock={tempBlock}
