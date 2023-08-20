@@ -23,6 +23,7 @@ export const Menu = () => {
             <FormGroup >
               <FormControlLabel control={<Switch defaultChecked />} label="Dice" />
               <FormControlLabel control={<Switch defaultChecked/>} label="Pieces" />
+              <a href="#" className="cky-banner-element">Cookie Settings</a>
             </FormGroup>
           </div>
         </div>
