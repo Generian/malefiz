@@ -1,7 +1,8 @@
 import styles from '../styles/Home.module.css'
+import * as http from 'http'
 import { io, Socket } from "socket.io-client"
 import { useEffect, useState } from 'react'
-import { getUuid, handleNewUuid } from 'src/utils/helper'
+import { getUuid, handleNewUuid, resolveUrlFromEnv } from 'src/utils/helper'
 import { PlayerColor } from 'src/game/resources/playerColors'
 import { useRouter } from 'next/router';
 import { ClientToServerEvents, ServerToClientEvents } from 'src/utils/socketHelpers'
@@ -12,6 +13,11 @@ import Image from 'next/image'
 import title_image from '../public/title_image.png'
 import lobbyBackground_image from '../public/lobbyBackground.png'
 import { GameState, GameType } from 'src/game/resources/gameTypes'
+
+// Keep Heroku app alive
+setInterval(() => {
+  http.get(resolveUrlFromEnv())
+}, 25 * 60 * 1000)
 
 export interface Player extends PublicPlayer {
   uuid: string
