@@ -241,10 +241,10 @@ export const GameComp = () => {
         const { game, playerColor } = gameValidityData
         if (!game) {
           console.error("Game lobby ID is not valid. Redirecting back to Lobby.")
-          router.push('/')
+          router.push('/lobby')
         } else if (!playerColor) {
           console.error("Player not in given game. Redirecting back to Lobby.")
-          router.push('/')
+          router.push('/lobby')
         } else {
           // Set game details
           updateGameStateWithNewGameData(game, myColor)
@@ -443,7 +443,7 @@ export const GameComp = () => {
             <div className={styles.infoContainer}>
               {isGameOver && <div className={styles.buttonContainer}>
                 <button className={`button primary`} onClick={restartGame}>Play again</button>
-                <button className={`button`} onClick={() => router.push('/')}>Back to Lobby</button>
+                <button className={`button`} onClick={() => router.push('/lobby')}>Back to Lobby</button>
               </div>}
               <div 
                 className={styles.bottomInfoContainer}
