@@ -1,14 +1,17 @@
-import '../styles/globals.css'
-import type { AppProps } from 'next/app'
-import '@fontsource/roboto/400.css'
-import ReactGA from 'react-ga'
-import { initGoogleAnalytics } from 'src/utils/analytics'
-import { useRouter } from 'next/router'
-import { useContext, useEffect } from 'react'
-import Script from 'next/script'
-import { acceptedLanguageType } from 'src/utils/translations'
-import { LanguageContext, LanguageContextProvider } from 'src/components/helper/LanguageContext'
-import { getCookie } from 'src/utils/helper'
+import "../styles/globals.css"
+import type { AppProps } from "next/app"
+import "@fontsource/roboto/400.css"
+import ReactGA from "react-ga"
+import { initGoogleAnalytics } from "src/utils/analytics"
+import { useRouter } from "next/router"
+import { useContext, useEffect } from "react"
+import Script from "next/script"
+import { acceptedLanguageType } from "src/utils/translations"
+import {
+  LanguageContext,
+  LanguageContextProvider,
+} from "src/components/helper/LanguageContext"
+import { getCookie } from "src/utils/helper"
 
 export default function App({ Component, pageProps }: AppProps) {
   const router = useRouter()
@@ -20,10 +23,10 @@ export default function App({ Component, pageProps }: AppProps) {
     logPageView()
 
     // Record subsequent page views
-    router.events.on('routeChangeComplete', logPageView)
+    router.events.on("routeChangeComplete", logPageView)
 
     return () => {
-      router.events.off('routeChangeComplete', logPageView)
+      router.events.off("routeChangeComplete", logPageView)
     }
   }, [])
 
@@ -33,29 +36,43 @@ export default function App({ Component, pageProps }: AppProps) {
   }
 
   useEffect(() => {
-    const language = getCookie('language') as acceptedLanguageType
+    const language = getCookie("language") as acceptedLanguageType
     if (language) {
       updateLanguage(language)
     }
   }, [])
 
-  return <>
-    <link href='https://fonts.googleapis.com/css?family=Arbutus' rel='stylesheet'></link>
-    <Script
-        src="https://www.googletagmanager.com/gtag/js?id=G-VX66E5NXM6"
-        strategy="afterInteractive"
+  return (
+    <>
+      <link
+        href='https://fonts.googleapis.com/css?family=Arbutus'
+        rel='stylesheet'
+      ></link>
+      <Script
+        id='cookieyes'
+        type='text/javascript'
+        src='https://cdn-cookieyes.com/client_data/0878e4eb4e8cdda52cb078fc/script.js'
+        strategy='afterInteractive'
       />
-    <Script id="google-analytics" strategy="afterInteractive">
-      {`
+      <Script
+        src='https://www.googletagmanager.com/gtag/js?id=G-VX66E5NXM6'
+        strategy='afterInteractive'
+      />
+      <Script
+        id='google-analytics'
+        strategy='afterInteractive'
+      >
+        {`
         window.dataLayer = window.dataLayer || [];
         function gtag(){dataLayer.push(arguments);}
         gtag('js', new Date());
 
         gtag('config', 'G-VX66E5NXM6');
       `}
-    </Script>
-    <LanguageContextProvider>
-      <Component {...pageProps} />
-    </LanguageContextProvider>
-  </>
+      </Script>
+      <LanguageContextProvider>
+        <Component {...pageProps} />
+      </LanguageContextProvider>
+    </>
+  )
 }
