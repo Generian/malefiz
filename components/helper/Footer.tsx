@@ -13,7 +13,7 @@ export const Footer = () => {
           href='#'
           className='cky-banner-element'
         >
-          {getCopy("footer.privacySettings", language)}
+          Cookie Settings
         </a>
       </div>
     </div>
