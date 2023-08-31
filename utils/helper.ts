@@ -6,6 +6,10 @@ export const onlyUnique = (value: any, index: any, self: string | any[]) => {
   return self.indexOf(value) === index;
 }
 
+export const setCookie = (name: string, value: string, lifetimeInDays: number) => {
+  document.cookie = `${name}=${value}; expires=${new Date(new Date().getTime()+60*60*1000*24*lifetimeInDays).toUTCString()}`
+}
+
 export const getCookie = (cname: string) => {
   if (typeof document == 'undefined') return null
   let name = cname + "="
@@ -52,7 +56,7 @@ export const handleNewUuid = (newUuid: string) => {
     console.log("Expected case. No cookie update needed. Uuid:", uuid)
   } else if (!uuid) {
     console.log("No uuid set yet. Saving new uuid in cookie:", newUuid)
-    document.cookie = `uuid=${newUuid}; expires=${new Date(new Date().getTime()+60*60*1000*24).toUTCString()}`
+    setCookie('uuid', newUuid, 30)
   } else {
     console.error("Received a mismatching uuid. Unexpected error.")
   }

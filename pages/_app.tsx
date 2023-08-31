@@ -4,11 +4,15 @@ import '@fontsource/roboto/400.css'
 import ReactGA from 'react-ga'
 import { initGoogleAnalytics } from 'src/utils/analytics'
 import { useRouter } from 'next/router'
-import { useEffect } from 'react'
+import { useContext, useEffect } from 'react'
 import Script from 'next/script'
+import { acceptedLanguageType } from 'src/utils/translations'
+import { LanguageContext, LanguageContextProvider } from 'src/components/helper/LanguageContext'
+import { getCookie } from 'src/utils/helper'
 
 export default function App({ Component, pageProps }: AppProps) {
   const router = useRouter()
+  const { updateLanguage } = useContext(LanguageContext)
 
   useEffect(() => {
     initGoogleAnalytics()
@@ -28,6 +32,13 @@ export default function App({ Component, pageProps }: AppProps) {
     ReactGA.pageview(window.location.pathname)
   }
 
+  useEffect(() => {
+    const language = getCookie('language') as acceptedLanguageType
+    if (language) {
+      updateLanguage(language)
+    }
+  }, [])
+
   return <>
     <link href='https://fonts.googleapis.com/css?family=Arbutus' rel='stylesheet'></link>
     <Script
@@ -43,6 +54,8 @@ export default function App({ Component, pageProps }: AppProps) {
         gtag('config', 'G-VX66E5NXM6');
       `}
     </Script>
-    <Component {...pageProps} />
+    <LanguageContextProvider>
+      <Component {...pageProps} />
+    </LanguageContextProvider>
   </>
 }

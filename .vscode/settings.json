@@ -1,0 +1,7 @@
+{
+  "javascript.format.semicolons": "remove",
+  "typescript.format.semicolons": "remove",
+  "prettier.semi": false,
+  "prettier.jsxSingleQuote": true,
+  "prettier.singleAttributePerLine": true
+}

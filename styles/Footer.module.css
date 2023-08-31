@@ -1,0 +1,25 @@
+.container {
+  position: absolute;
+  bottom: -0.25rem;
+  right: 2rem;
+}
+
+.buttonContainer {
+  background-color: var(--coverBorder);
+  padding: 0.5rem;
+  padding-top: 0.25rem;
+  padding-bottom: 0.25rem;
+  border-radius: 0.25rem;
+}
+
+.buttonContainer a {
+  text-decoration: none;
+  color: var(--gray3);
+  font-size: small;
+}
+
+.buttonContainer a:hover {
+  text-decoration: underline;
+  color: var(--gray1);
+  font-size: small;
+}
