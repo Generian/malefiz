@@ -46,12 +46,6 @@ export const Menu = () => {
                 control={<Switch defaultChecked />}
                 label={getCopy("settings.pieces", language)}
               />
-              <a
-                href='#'
-                className='cky-banner-element'
-              >
-                Cookie Settings
-              </a>
             </FormGroup>
           </div>
         </div>
