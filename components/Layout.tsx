@@ -55,10 +55,17 @@ interface LayoutProps {
   board: ReactNode
   instructions?: ReactNode
   dice?: ReactNode
+  replayControls?: ReactNode
   menu?: ReactNode
 }
 
-export const Layout = ({ board, instructions, dice, menu }: LayoutProps) => {
+export const Layout = ({
+  board,
+  instructions,
+  dice,
+  replayControls,
+  menu,
+}: LayoutProps) => {
   const windowSize = useWindowSize()
   if (
     typeof windowSize == "undefined" ||
@@ -106,6 +113,7 @@ export const Layout = ({ board, instructions, dice, menu }: LayoutProps) => {
             >
               {dice}
             </div>
+            <div className={styles.replayControls}>{replayControls}</div>
             {!overlayMode && (
               <div
                 className={styles.instructions}

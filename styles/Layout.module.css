@@ -107,6 +107,14 @@
   z-index: 5;
 }
 
+.replayControls {
+  position: relative;
+  top: 200;
+  left: 0;
+  display: flex;
+  justify-content: end;
+}
+
 @media only screen and (max-width: 600px) {
   .menu {
     padding: 0;

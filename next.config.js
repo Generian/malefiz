@@ -6,16 +6,16 @@ const nextConfig = {
       test: /\.mp3$/,
       use: [
         {
-          loader: 'file-loader',
+          loader: "file-loader",
           options: {
-            name: '[name].[ext]',
-            outputPath: 'static/audio/',
+            name: "[name].[ext]",
+            outputPath: "static/audio/",
           },
         },
       ],
-    });
+    })
 
-    return config;
+    return config
   },
 }
 

@@ -222,6 +222,18 @@ const translations = {
         hr: " je pobijedio/la igru!",
       },
     },
+    instructions: {
+      restart: {
+        en: "Play again",
+        de: "Nochmal spielen",
+        hr: "Igraj ponovno",
+      },
+      backToLobby: {
+        en: "Back to Lobby",
+        de: "Zurück zur Lobby",
+        hr: "Natrag u predvorje",
+      },
+    },
   },
   footer: {
     privacySettings: {

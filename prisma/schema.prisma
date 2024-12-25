@@ -1,0 +1,26 @@
+// schema.prisma
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url = env("POSTGRES_PRISMA_URL") // uses connection pooling
+  directUrl = env("POSTGRES_URL_NON_POOLING") // uses a direct connection
+}
+
+model Game {
+  lobbyId             String      @id
+  createdAt           DateTime
+  updatedAt           DateTime
+  environment         String
+  gameType            String
+  players             String[]
+  activePlayerColor   String
+  blocks              Int[]
+  pieces              String[]
+  cooldown            Int
+  gameOver            Boolean
+  actions             String[]
+}
