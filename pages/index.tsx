@@ -51,7 +51,7 @@ export default function Home() {
   const { language, updateLanguage } = useContext(LanguageContext)
 
   return (
-    <PageFrame>
+    <PageFrame withContext={false}>
       <div className={`${styles.container} background`}>
         <div className={styles.backgroundImage}>
           <Image
