@@ -41,10 +41,7 @@ export default function PageFrame({
         {/* <script id="Cookiebot" src="https://consent.cookiebot.com/uc.js" data-cbid="8bfe88c6-fdaf-41f1-a309-756278ef2be8" data-blockingmode="auto" type="text/javascript"></script> */}
         {/* <script src="https://app.enzuzo.com/apps/enzuzo/static/js/__enzuzo-cookiebar.js?uuid=cdd6de02-3f46-11ee-8b2a-57763a880aa1"></script> */}
       </Head>
-      <main>
-        {!withContext && children}
-        {withContext ? <Context>{children}</Context> : ""}
-      </main>
+      <main>{children}</main>
     </>
   )
 }

@@ -57,8 +57,8 @@ export default function Home() {
           <Image
             src={lobbyBackground_image}
             alt='malefiz background image'
-            layout='fill'
-            objectFit='contain'
+            fill
+            priority
           />
         </div>
         <div className={styles.container_l1}>

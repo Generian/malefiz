@@ -1,34 +1,14 @@
-import { useCallback, useEffect, useMemo, useState } from "react"
+import { useEffect, useState } from "react"
 import styles from "styles/Game.module.css"
 import { DiceRoller } from "src/game/DiceRoller"
 import { Board } from "./Board"
-import {
-  activeColors,
-  nextPlayerColor,
-  PlayerColor,
-} from "./resources/playerColors"
-import {
-  defaultBlocks,
-  getResetPiecePosition,
-  initialisePieces,
-  positions,
-  winningPosId,
-} from "./resources/positions"
+import { activeColors, PlayerColor } from "./resources/playerColors"
+import { defaultBlocks } from "./resources/positions"
 import { getAvailableMovePaths } from "./resources/routing"
-import { io, Socket } from "socket.io-client"
-import {
-  ClientToServerEvents,
-  ServerToClientEvents,
-} from "src/utils/socketHelpers"
-import { GameState, GameType, Piece } from "./resources/gameTypes"
-import {
-  getPlayer,
-  updatePlayers,
-  getUuid,
-  handleNewUuid,
-} from "src/utils/helper"
+import { GameType, Piece } from "./resources/gameTypes"
+import { getUuid } from "src/utils/helper"
 import { useRouter } from "next/router"
-import { Player, PublicPlayer } from "src/pages"
+import { Player } from "src/pages"
 import { Layout } from "src/components/Layout"
 import { Info, Infos } from "./Infos"
 import { PlayerOnlineState } from "./PlayerOnlineState"
@@ -39,19 +19,19 @@ import {
   validateGameUpdate,
 } from "./resources/gameValidation"
 import { Game } from "src/pages/api/socket"
-import useSound from "use-sound"
-import { constants } from "buffer"
 import useKeypress from "react-use-keypress"
 import { useAudio } from "./Audio"
 import { Menu } from "src/components/Menu"
 import { useData } from "src/context/DataContext"
+import { useSocket } from "src/context/SocketContext"
 
 export const debugMode = false
 
-let socket: Socket<ServerToClientEvents, ClientToServerEvents>
-
 export const GameComp = () => {
   const router = useRouter()
+  const { socket } = useSocket()
+  const { games, getGame, getPlayerColor, playerColorsPerGame } = useData()
+
   const playSound = useAudio()
   // const [play] = useSound(moveSound)
   const { lid, r, g, y, b } = router.query
@@ -272,8 +252,6 @@ export const GameComp = () => {
     }
   }, [lid])
 
-  const { games, getGame, getPlayerColor } = useData()
-
   // New socket logic using data from context
   useEffect(() => {
     if (typeof lid != "string") {
@@ -281,15 +259,28 @@ export const GameComp = () => {
       return
     }
 
+    console.log("Using data from context")
+
     const game = getGame(lid)
     const playerColor = getPlayerColor(lid)
 
     if (!game) {
-      console.error("Game lobby ID is not valid. Redirecting back to Lobby.")
-      router.push("/lobby")
+      console.error(
+        "Game lobby ID is not valid. Redirecting back to Lobby.",
+        lid,
+        game,
+        games
+      )
+      // router.push("/lobby")
     } else if (!playerColor) {
-      console.error("Player not in given game. Redirecting back to Lobby.")
-      router.push("/lobby")
+      console.error(
+        "Player not in given game. Redirecting back to Lobby.",
+        lid,
+        playerColor,
+        playerColorsPerGame,
+        games
+      )
+      // router.push("/lobby")
     } else {
       // Set game details
       console.log("Received game update:", game)
@@ -300,73 +291,16 @@ export const GameComp = () => {
     }
   }, [games])
 
-  // const socketInitializer = async () => {
-  //   if (typeof lid != "string") return
-
-  //   console.log("Initialising socket")
-  //   await fetch("/api/socket")
-  //   socket = io()
-
-  //   socket.on("connect", () => {
-  //     console.log("connected", socket.id)
-
-  //     socket.emit(
-  //       "requestUuid",
-  //       lid,
-  //       getUuid(),
-  //       (newUuid, gameValidityData) => {
-  //         handleNewUuid(newUuid)
-
-  //         const { game, playerColor } = gameValidityData
-  //         if (!game) {
-  //           console.error(
-  //             "Game lobby ID is not valid. Redirecting back to Lobby."
-  //           )
-  //           router.push("/lobby")
-  //         } else if (!playerColor) {
-  //           console.error(
-  //             "Player not in given game. Redirecting back to Lobby."
-  //           )
-  //           router.push("/lobby")
-  //         } else {
-  //           // Set game details
-  //           updateGameStateWithNewGameData(game, myColor)
-
-  //           // Set player's color
-  //           setMyColor(playerColor)
-  //         }
-  //       }
-  //     )
-  //   })
-
-  //   socket.on("receiveGameUpdate", (game) => {
-  //     if (game.lobbyId == lid) {
-  //       console.log("Received game update:", game)
-  //       updateGameStateWithNewGameData(game, myColor)
-  //     } else {
-  //       console.log("Received game update for another lobby.")
-  //     }
-  //   })
-
-  //   socket.on("playerUpdate", (lobbyId, players) => {
-  //     if (lobbyId == lid && players) {
-  //       console.log("Receive player update:", players)
-  //       setPlayers(players)
-  //     } else {
-  //       console.log("Received player update for another lobby.")
-  //     }
-  //   })
-  // }
-
   // Multiplayer interaction
   const updateServerWithGameState = (action: Action) => {
+    console.log("Sending action to server. Socket action: ", socket!!)
     if (typeof lid == "string") {
-      socket.emit(
+      socket?.emit(
         "updateServerWithGameState",
         lid,
         getUuid(),
         action,
-        (isValid, reason) => {
+        (isValid: boolean, reason: string) => {
           if (!isValid) {
             console.error("Move failed! Reason:", reason)
           }
@@ -482,7 +416,7 @@ export const GameComp = () => {
 
   const restartGame = () => {
     if (typeof lid == "string") {
-      socket.emit("startGame", lid, getUuid(), true)
+      socket?.emit("startGame", lid, getUuid(), true)
     } else {
       if (!players) return
       const game = initialiseGame(players, gameType, 0, undefined)

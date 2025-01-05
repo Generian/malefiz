@@ -12,18 +12,20 @@ import {
   LanguageContextProvider,
 } from "src/components/helper/LanguageContext"
 import { getCookie } from "src/utils/helper"
+import Context from "src/context/Context"
 
 export default function App({ Component, pageProps }: AppProps) {
   const router = useRouter()
   const { updateLanguage } = useContext(LanguageContext)
 
   useEffect(() => {
-    initGoogleAnalytics()
-    // Record initial page view
-    logPageView()
-
-    // Record subsequent page views
-    router.events.on("routeChangeComplete", logPageView)
+    if (process.env.NODE_ENV !== "development") {
+      initGoogleAnalytics()
+      // Record initial page view
+      logPageView()
+      // Record subsequent page views
+      router.events.on("routeChangeComplete", logPageView)
+    }
 
     return () => {
       router.events.off("routeChangeComplete", logPageView)
@@ -48,30 +50,38 @@ export default function App({ Component, pageProps }: AppProps) {
         href='https://fonts.googleapis.com/css?family=Arbutus'
         rel='stylesheet'
       ></link>
-      <Script
-        id='cookieyes'
-        type='text/javascript'
-        src='https://cdn-cookieyes.com/client_data/0878e4eb4e8cdda52cb078fc/script.js'
-        strategy='afterInteractive'
-      />
-      <Script
-        src='https://www.googletagmanager.com/gtag/js?id=G-VX66E5NXM6'
-        strategy='afterInteractive'
-      />
-      <Script
-        id='google-analytics'
-        strategy='afterInteractive'
-      >
-        {`
+      {process.env.NODE_ENV !== "development" && (
+        <Script
+          id='cookieyes'
+          type='text/javascript'
+          src='https://cdn-cookieyes.com/client_data/0878e4eb4e8cdda52cb078fc/script.js'
+          strategy='afterInteractive'
+        />
+      )}
+      {process.env.NODE_ENV !== "development" && (
+        <Script
+          src='https://www.googletagmanager.com/gtag/js?id=G-VX66E5NXM6'
+          strategy='afterInteractive'
+        />
+      )}
+      {process.env.NODE_ENV !== "development" && (
+        <Script
+          id='google-analytics'
+          strategy='afterInteractive'
+        >
+          {`
         window.dataLayer = window.dataLayer || [];
         function gtag(){dataLayer.push(arguments);}
         gtag('js', new Date());
 
         gtag('config', 'G-VX66E5NXM6');
       `}
-      </Script>
+        </Script>
+      )}
       <LanguageContextProvider>
-        <Component {...pageProps} />
+        <Context>
+          <Component {...pageProps} />
+        </Context>
       </LanguageContextProvider>
     </>
   )
