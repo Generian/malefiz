@@ -264,32 +264,30 @@ export const GameComp = () => {
     const game = getGame(lid)
     const playerColor = getPlayerColor(lid)
 
-    if (!game) {
-      console.error(
-        "Game lobby ID is not valid. Redirecting back to Lobby.",
-        lid,
-        game,
-        games
-      )
-      // router.push("/lobby")
+    if (!router) {
+      console.warn("Router is not available. Waiting...")
+      return
+    } else if (!game) {
+      console.warn("Game not found. Waiting...")
     } else if (!playerColor) {
-      console.error(
-        "Player not in given game. Redirecting back to Lobby.",
+      console.warn(
+        "Note: Player not in given game.",
         lid,
         playerColor,
         playerColorsPerGame,
         games
       )
-      // router.push("/lobby")
+      console.log("Received game update for a view-only lobby.")
+      updateGameStateWithNewGameData(game)
     } else {
       // Set game details
-      console.log("Received game update:", game)
+      console.log("Received game update for player in game:", game)
       updateGameStateWithNewGameData(game, myColor)
 
       // Set player's color
       setMyColor(playerColor)
     }
-  }, [games])
+  }, [games, playerColorsPerGame, router])
 
   // Multiplayer interaction
   const updateServerWithGameState = (action: Action) => {
