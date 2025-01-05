@@ -229,5 +229,10 @@ const translations = {
       de: "Datenschutzeinstellungen",
       hr: "Postavke privatnosti",
     },
+    forumButtonLabel: {
+      en: "Forum",
+      de: "Forum",
+      hr: "Forum",
+    },
   },
 }

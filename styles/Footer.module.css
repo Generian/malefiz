@@ -2,14 +2,24 @@
   position: absolute;
   bottom: -0.25rem;
   right: 2rem;
+  display: flex;
+  flex-direction: row;
+  gap: 0.5rem;
 }
 
 .buttonContainer {
+  position: relative;
+  overflow: visible;
   background-color: var(--coverBorder);
   padding: 0.5rem;
   padding-top: 0.25rem;
   padding-bottom: 0.25rem;
   border-radius: 0.25rem;
+}
+
+.buttonContainerHighlighted {
+  background-color: var(--coverBorder);
+  font-weight: bold;
 }
 
 .buttonContainer a {
@@ -22,4 +32,10 @@
   text-decoration: underline;
   color: var(--gray1);
   font-size: small;
+}
+
+.newIcon {
+  position: absolute;
+  top: -0.75rem;
+  right: -0.75rem;
 }

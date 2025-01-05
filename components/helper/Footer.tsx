@@ -2,6 +2,7 @@ import { useContext } from "react"
 import styles from "styles/Footer.module.css"
 import { LanguageContext } from "./LanguageContext"
 import { getCopy } from "src/utils/translations"
+import StarsIcon from "@mui/icons-material/Stars"
 
 export const Footer = () => {
   const { language } = useContext(LanguageContext)
@@ -15,6 +16,21 @@ export const Footer = () => {
         >
           {getCopy("footer.privacySettings", language)}
         </a>
+      </div>
+      <div
+        className={`${styles.buttonContainer} ${styles.buttonContainerHighlighted}`}
+      >
+        <a
+          href='https://github.com/Generian/malefiz/discussions'
+          className='cky-banner-element'
+          target='_blank'
+          rel='noopener noreferrer'
+        >
+          {getCopy("footer.forumButtonLabel", language)}
+        </a>
+        <div className={styles.newIcon}>
+          <StarsIcon style={{ color: "white" }} />
+        </div>
       </div>
     </div>
   )
