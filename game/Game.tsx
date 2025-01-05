@@ -476,12 +476,14 @@ export const GameComp = () => {
               <div className={styles.infoContainer}>
                 {isGameOver && (
                   <div className={styles.buttonContainer}>
-                    <button
-                      className={`button primary`}
-                      onClick={restartGame}
-                    >
-                      Play again
-                    </button>
+                    {myColor && (
+                      <button
+                        className={`button primary`}
+                        onClick={restartGame}
+                      >
+                        Play again
+                      </button>
+                    )}
                     <button
                       className={`button`}
                       onClick={() => router.push("/lobby")}
