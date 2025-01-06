@@ -60,7 +60,7 @@ export interface Game {
   infos: Info[]
 }
 
-interface Games {
+export interface Games {
   [key: string]: Game
 }
 
@@ -81,14 +81,23 @@ const SocketHandler = (_: NextApiRequest, res: NextApiResponseWithSocket) => {
     const io = new Server(res.socket.server)
     res.socket.server.io = io
 
+    // Create variables and attach them to the server instance
+    if (!res.socket.server.games) {
+      res.socket.server.users = {}
+      res.socket.server.games = {}
+      res.socket.server.botExecutor = {}
+    }
+    const { users, games, botExecutor } = res.socket.server as {
+      users: Users
+      games: Games
+      botExecutor: BotExecutor
+    }
+
+    // Setting local lobby variable due to bad code. TODO: Refactor
+    let lobbies: Lobby[] = []
+
     // Set constants
     const shortestMovePaths = getShortestPathsToFinish()
-
-    // Set variables
-    const users: Users = {}
-    let lobbies: Lobby[] = []
-    const games: Games = {}
-    const botExecutor: BotExecutor = {}
 
     const getUuidBySocketId = (socketId: string) => {
       return Object.keys(users).find((uuid) =>
