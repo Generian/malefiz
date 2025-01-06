@@ -16,26 +16,45 @@ export default function handler(
   res: NextApiResponse & { socket: SocketWithServer }
 ) {
   if (!res?.socket?.server.games) {
-    res.status(500).json({ error: "Games state is not initialized" })
+    res.status(500).json("")
     return
   }
 
   const { games } = res.socket.server
-  let latestTimestamp = new Date(Date.now() - 3 * 60 * 60 * 1000).getTime()
+  let gameInfos = []
+  let latestTimestamp = new Date(Date.now() - 10 * 60 * 1000).getTime()
   let latestGameId = ""
-  console.log("Games from singleton:", games)
+  let maxActionsLength = 0
   if (games) {
     for (const game of Object.values(games)) {
       if ((game as Game).gameOver) continue
       const { actions, lobbyId } = game as Game
       if (!actions) continue
+      const currentGameActionsLength = actions.length
+      if (currentGameActionsLength > maxActionsLength) {
+        maxActionsLength = currentGameActionsLength
+      }
+      let currentGameLatestTimestamp = 0
       for (const action of actions) {
         if (!action || !action.createdAt) continue
         if (action.createdAt > latestTimestamp) {
           latestTimestamp = action.createdAt
           latestGameId = lobbyId
         }
+        if (action.createdAt > currentGameLatestTimestamp) {
+          currentGameLatestTimestamp = action.createdAt
+        }
       }
+      gameInfos.push({
+        lobbyId,
+        currentGameActionsLength,
+        currentGameLatestTimestamp,
+      })
+    }
+    if (latestGameId) {
+      const furthestProgressedGame = gameInfos.find(
+        (game) => game.currentGameActionsLength === maxActionsLength
+      )
     }
   }
 
