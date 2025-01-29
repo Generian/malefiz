@@ -66,8 +66,16 @@ export const GameComp = () => {
   useEffect(() => {
     // Set dice value for single player game
     const p = getActivePlayer()
+
     if (p?.diceValue && p?.gameState != "ROLL_DICE") {
       setDiceValue(p.diceValue)
+    }
+
+    // Exception in case of 'NORMAL' game type
+    if (gameType == "NORMAL" && p?.gameState == "ROLL_DICE") {
+      // Get local player and set dice value
+      const localPlayer = players?.find((p) => p.color == myColor)
+      localPlayer?.diceValue && setDiceValue(localPlayer?.diceValue)
     }
   }, [players])
 
