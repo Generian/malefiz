@@ -91,8 +91,11 @@ export const validateGameUpdate = ({ game, color, action }: GameUpdate) => {
         switch (action.updateType) {
           case "ROLL_DICE":
             const diceValue = generateDiceValue()
+            let hasAvailableMovePaths = false
+
             newPlayer.diceValue = diceValue
-            newPlayer.gameState = "MOVE_PIECE"
+
+            // Add infos into game infos
             newGame.infos = [
               ...newGame.infos,
               {
@@ -101,6 +104,47 @@ export const validateGameUpdate = ({ game, color, action }: GameUpdate) => {
                 diceValue: diceValue,
               },
             ]
+
+            newPlayer.gameState = "MOVE_PIECE"
+
+            // Check if player can move any piece
+            if (game.gameType == "NORMAL") {
+              // Only check in case of normal game type. In competition move, the game can progress without any piece movement by one player.
+              const playerPieces = game.pieces.filter((p) => p.color == color)
+              for (let i = 0; i < playerPieces.length; i++) {
+                const movePaths = getAvailableMovePaths(
+                  playerPieces[i].pos,
+                  color,
+                  newPlayer.diceValue,
+                  game.blocks,
+                  game.pieces
+                )
+                if (movePaths.length > 0) {
+                  hasAvailableMovePaths = true
+                  break
+                }
+              }
+              if (!hasAvailableMovePaths) {
+                reason = "No available move paths for any piece."
+                newPlayer.gameState = "ROLL_DICE"
+
+                // Switch to next player
+                const nextColor = nextPlayerColor(
+                  game.activePlayerColor,
+                  game.players.map((p) => p.color)
+                )
+                newGame.activePlayerColor = nextColor
+                newGame.infos = [
+                  ...newGame.infos,
+                  {
+                    infoType: "TURN",
+                    player: newGame.players.filter(
+                      (p) => p.color == nextColor
+                    )[0],
+                  },
+                ]
+              }
+            }
             isValid = true
             break
 
